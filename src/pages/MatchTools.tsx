@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +15,7 @@ const MatchTools = () => {
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
-  const [goalShifts, setGoalShifts] = useState<string[]>([]);
+  const [goalkeepingRotations, setGoalkeepingRotations] = useState<Array<{player: string, timeSlot: string}>>([]);
   
   // Due form state
   const [newDue, setNewDue] = useState({
@@ -34,20 +33,50 @@ const MatchTools = () => {
 
   const availableSquads = squads.filter(squad => squad.mode === selectedMode);
 
-  const generateGoalShifts = () => {
-    const shifts = ['First Half', 'Second Half', 'Extra Time'];
-    const randomShifts = [];
+  const generateGoalkeepingRotations = () => {
+    if (!selectedSquadA && !selectedSquadB) {
+      toast({
+        title: "Error ❌",
+        description: "Please select both teams first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const teamA = squads.find(s => s.id === selectedSquadA);
+    const teamB = squads.find(s => s.id === selectedSquadB);
     
-    for (let i = 0; i < 6; i++) {
-      const randomShift = shifts[Math.floor(Math.random() * shifts.length)];
-      const minute = Math.floor(Math.random() * 45) + 1;
-      randomShifts.push(`${randomShift} - ${minute}'`);
+    if (!teamA || !teamB) {
+      toast({
+        title: "Error ❌",
+        description: "Selected teams not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const allPlayers = [...teamA.players, ...teamB.players];
+    const rotations = [];
+    
+    // Generate 5-minute intervals for a 90-minute match (18 slots)
+    const totalSlots = 18;
+    const shuffledPlayers = [...allPlayers].sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < totalSlots; i++) {
+      const startMinute = i * 5;
+      const endMinute = (i + 1) * 5;
+      const playerIndex = i % shuffledPlayers.length;
+      
+      rotations.push({
+        player: shuffledPlayers[playerIndex].name,
+        timeSlot: `${startMinute}' - ${endMinute}'`
+      });
     }
     
-    setGoalShifts(randomShifts);
+    setGoalkeepingRotations(rotations);
     toast({
-      title: "Goal Shifts Generated! ⚽",
-      description: "Random goal timing shifts created",
+      title: "Goalkeeper Rotations Generated! 🥅",
+      description: "5-minute goalkeeper rotations created for all players",
     });
   };
 
@@ -195,29 +224,47 @@ const MatchTools = () => {
         </CardContent>
       </Card>
 
-      {/* Goal Shifts Generator */}
+      {/* Goalkeeper Rotation Generator */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
-          <CardTitle className="text-[#333446]">Goal Shifts Generator ⏰</CardTitle>
+          <CardTitle className="text-[#333446]">Goalkeeper Rotation Generator 🥅</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="text-sm text-[#7F8CAA] mb-2">
+            Generate 5-minute goalkeeper rotations for all players in the selected teams
+          </div>
           <Button 
-            onClick={generateGoalShifts}
+            onClick={generateGoalkeepingRotations}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
           >
-            Generate Random Goal Shifts 🎲
+            Generate Goalkeeper Rotations 🎲
           </Button>
           
-          {goalShifts.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {goalShifts.map((shift, index) => (
-                <div 
-                  key={index}
-                  className="p-3 rounded-lg bg-[#EAEFEF] text-center text-[#333446] font-medium"
-                >
-                  ⚽ {shift}
-                </div>
-              ))}
+          {goalkeepingRotations.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="font-medium text-[#333446]">90-Minute Match Rotation Schedule:</h3>
+              <div className="max-h-96 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-[#333446]">Time Slot</TableHead>
+                      <TableHead className="text-[#333446]">Goalkeeper</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {goalkeepingRotations.map((rotation, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium text-[#333446]">
+                          🥅 {rotation.timeSlot}
+                        </TableCell>
+                        <TableCell className="text-[#7F8CAA]">
+                          {rotation.player}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
         </CardContent>
