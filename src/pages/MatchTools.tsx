@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -258,33 +259,47 @@ const MatchTools = () => {
           </Button>
           
           {goalkeepingRotations.length > 0 && (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <h3 className="font-medium text-[#333446]">Goalkeeper Rotation Schedule:</h3>
-              <div className="max-h-96 overflow-y-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-[#333446]">Time Slot</TableHead>
-                      <TableHead className="text-[#333446]">Team</TableHead>
-                      <TableHead className="text-[#333446]">Goalkeeper</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {goalkeepingRotations.map((rotation, index) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium text-[#333446]">
-                          🥅 {rotation.timeSlot}
-                        </TableCell>
-                        <TableCell className="text-[#7F8CAA]">
-                          {rotation.team === squads.find(s => s.id === selectedSquadA)?.name ? '🔴' : '🔵'} {rotation.team}
-                        </TableCell>
-                        <TableCell className="text-[#7F8CAA]">
-                          {rotation.player}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              
+              {/* Show rotations divided by team */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {[selectedSquadA, selectedSquadB].map((squadId, index) => {
+                  const squad = squads.find(s => s.id === squadId);
+                  if (!squad) return null;
+                  
+                  const teamRotations = goalkeepingRotations.filter(rotation => rotation.team === squad.name);
+                  
+                  return (
+                    <div key={squadId} className="space-y-2">
+                      <h4 className="font-medium text-[#333446] flex items-center gap-2">
+                        {index === 0 ? '🔴' : '🔵'} {squad.name} - Goalkeeper Schedule
+                      </h4>
+                      <div className="max-h-96 overflow-y-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="text-[#333446]">Time Slot</TableHead>
+                              <TableHead className="text-[#333446]">Goalkeeper</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {teamRotations.map((rotation, rotIndex) => (
+                              <TableRow key={rotIndex}>
+                                <TableCell className="font-medium text-[#333446]">
+                                  🥅 {rotation.timeSlot}
+                                </TableCell>
+                                <TableCell className="text-[#7F8CAA]">
+                                  {rotation.player}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -378,6 +393,52 @@ const MatchTools = () => {
       </Card>
     </div>
   );
+
+  const handleAddDue = () => {
+    if (!newDue.playerName || !newDue.amount) {
+      toast({
+        title: "Error ❌",
+        description: "Please fill in player name and amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const due: Due = {
+      id: `due-${Date.now()}`,
+      playerName: newDue.playerName,
+      amount: parseFloat(newDue.amount),
+      description: newDue.description || 'Match fee',
+      paid: false,
+      date: new Date(),
+    };
+
+    addDue(due);
+    setNewDue({ playerName: '', amount: '', description: '' });
+    
+    toast({
+      title: "Due Added! 💰",
+      description: `Added €${due.amount} due for ${due.playerName}`,
+    });
+  };
+
+  const toggleDuePaid = (dueId: string, paid: boolean) => {
+    updateDue(dueId, { paid });
+    toast({
+      title: paid ? "Payment Recorded! ✅" : "Payment Unmarked ❌",
+      description: paid ? "Due marked as paid" : "Due marked as unpaid",
+    });
+  };
+
+  const getPositionEmoji = (position: string) => {
+    switch (position) {
+      case 'GK': return '🥅';
+      case 'DEF': return '🛡️';
+      case 'MID': return '⚙️';
+      case 'ATT': return '⚔️';
+      default: return '⚽';
+    }
+  };
 };
 
 export default MatchTools;
