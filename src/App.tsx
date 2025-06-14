@@ -1,9 +1,16 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { FantacalciettoProvider } from "@/context/FantacalciettoContext";
+import Navigation from "@/components/Navigation";
+import Ranking from "@/pages/Ranking";
+import SquadCreator from "@/pages/SquadCreator";
+import MatchTools from "@/pages/MatchTools";
+import Download from "@/pages/Download";
+import Upload from "@/pages/Upload";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -14,11 +21,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <FantacalciettoProvider>
+          <div className="min-h-screen bg-[#EAEFEF]">
+            <Navigation />
+            <Routes>
+              <Route path="/" element={<Ranking />} />
+              <Route path="/squad-creator" element={<SquadCreator />} />
+              <Route path="/match-tools" element={<MatchTools />} />
+              <Route path="/download" element={<Download />} />
+              <Route path="/upload" element={<Upload />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+        </FantacalciettoProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
