@@ -15,7 +15,7 @@ const MatchTools = () => {
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
-  const [goalkeepingRotations, setGoalkeepingRotations] = useState<Array<{player: string, timeSlot: string}>>([]);
+  const [goalkeepingRotations, setGoalkeepingRotations] = useState<Array<{player: string, timeSlot: string, team: string}>>([]);
   
   // Due form state
   const [newDue, setNewDue] = useState({
@@ -55,28 +55,45 @@ const MatchTools = () => {
       return;
     }
 
-    const allPlayers = [...teamA.players, ...teamB.players];
     const rotations = [];
     
-    // Generate 5-minute intervals for a 90-minute match (18 slots)
-    const totalSlots = 18;
-    const shuffledPlayers = [...allPlayers].sort(() => Math.random() - 0.5);
-    
-    for (let i = 0; i < totalSlots; i++) {
+    // Generate rotations for Team A
+    const shuffledTeamA = [...teamA.players].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < shuffledTeamA.length; i++) {
       const startMinute = i * 5;
       const endMinute = (i + 1) * 5;
-      const playerIndex = i % shuffledPlayers.length;
       
       rotations.push({
-        player: shuffledPlayers[playerIndex].name,
-        timeSlot: `${startMinute}' - ${endMinute}'`
+        player: shuffledTeamA[i].name,
+        timeSlot: `${startMinute}' - ${endMinute}'`,
+        team: teamA.name
       });
     }
+    
+    // Generate rotations for Team B
+    const shuffledTeamB = [...teamB.players].sort(() => Math.random() - 0.5);
+    for (let i = 0; i < shuffledTeamB.length; i++) {
+      const startMinute = i * 5;
+      const endMinute = (i + 1) * 5;
+      
+      rotations.push({
+        player: shuffledTeamB[i].name,
+        timeSlot: `${startMinute}' - ${endMinute}'`,
+        team: teamB.name
+      });
+    }
+    
+    // Sort rotations by start time
+    rotations.sort((a, b) => {
+      const aStart = parseInt(a.timeSlot.split("'")[0]);
+      const bStart = parseInt(b.timeSlot.split("'")[0]);
+      return aStart - bStart;
+    });
     
     setGoalkeepingRotations(rotations);
     toast({
       title: "Goalkeeper Rotations Generated! 🥅",
-      description: "5-minute goalkeeper rotations created for all players",
+      description: `5-minute goalkeeper rotations created for both teams`,
     });
   };
 
@@ -231,7 +248,7 @@ const MatchTools = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-[#7F8CAA] mb-2">
-            Generate 5-minute goalkeeper rotations for all players in the selected teams
+            Generate 5-minute goalkeeper rotations for all players from both teams
           </div>
           <Button 
             onClick={generateGoalkeepingRotations}
@@ -242,12 +259,13 @@ const MatchTools = () => {
           
           {goalkeepingRotations.length > 0 && (
             <div className="space-y-2">
-              <h3 className="font-medium text-[#333446]">90-Minute Match Rotation Schedule:</h3>
+              <h3 className="font-medium text-[#333446]">Goalkeeper Rotation Schedule:</h3>
               <div className="max-h-96 overflow-y-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-[#333446]">Time Slot</TableHead>
+                      <TableHead className="text-[#333446]">Team</TableHead>
                       <TableHead className="text-[#333446]">Goalkeeper</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -256,6 +274,9 @@ const MatchTools = () => {
                       <TableRow key={index}>
                         <TableCell className="font-medium text-[#333446]">
                           🥅 {rotation.timeSlot}
+                        </TableCell>
+                        <TableCell className="text-[#7F8CAA]">
+                          {rotation.team === squads.find(s => s.id === selectedSquadA)?.name ? '🔴' : '🔵'} {rotation.team}
                         </TableCell>
                         <TableCell className="text-[#7F8CAA]">
                           {rotation.player}
