@@ -40,7 +40,7 @@ const Navigation = () => {
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚽</span>
-            <h1 className="text-xl font-bold text-[#B8CFCE]">Fantacalcietto</h1>
+            <h1 className="text-xl font-bold text-[#B8CFCE]">FantaCalcetto</h1>
           </div>
           <div className="flex gap-2">
             {navItems.map((item) => (
@@ -55,7 +55,7 @@ const Navigation = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-2xl">⚽</span>
-            <h1 className="text-lg font-bold text-[#B8CFCE]">Fantacalcietto</h1>
+            <h1 className="text-lg font-bold text-[#B8CFCE]">FantaCalcetto</h1>
           </div>
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
