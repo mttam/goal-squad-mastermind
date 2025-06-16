@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +16,8 @@ const MatchTools = () => {
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
-  const [selectedFormation, setSelectedFormation] = useState('');
+  const [selectedFormationA, setSelectedFormationA] = useState('');
+  const [selectedFormationB, setSelectedFormationB] = useState('');
   const [goalkeepingRotations, setGoalkeepingRotations] = useState<Array<{player: string, timeSlot: string, team: string}>>([]);
   
   // Due form state
@@ -264,23 +266,6 @@ const MatchTools = () => {
             ))}
           </div>
 
-          {/* Formation Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="formation">Formation</Label>
-            <Select value={selectedFormation} onValueChange={setSelectedFormation}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Formation" />
-              </SelectTrigger>
-              <SelectContent>
-                {formations[selectedMode].map((formation) => (
-                  <SelectItem key={formation} value={formation}>
-                    ⚽ {formation}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Squad Selection */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -315,10 +300,47 @@ const MatchTools = () => {
             </div>
           </div>
 
+          {/* Formation Selection for both teams */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="formation-a">Team A Formation</Label>
+              <Select value={selectedFormationA} onValueChange={setSelectedFormationA}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Formation for Team A" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formations[selectedMode].map((formation) => (
+                    <SelectItem key={formation} value={formation}>
+                      ⚽ {formation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="formation-b">Team B Formation</Label>
+              <Select value={selectedFormationB} onValueChange={setSelectedFormationB}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Formation for Team B" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formations[selectedMode].map((formation) => (
+                    <SelectItem key={formation} value={formation}>
+                      ⚽ {formation}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {/* Show Selected Teams */}
           {selectedSquadA && selectedSquadB && (
             <div className="grid md:grid-cols-2 gap-4 mt-4">
-              {[selectedSquadA, selectedSquadB].map((squadId, index) => {
+              {[
+                { squadId: selectedSquadA, formation: selectedFormationA, index: 0 },
+                { squadId: selectedSquadB, formation: selectedFormationB, index: 1 }
+              ].map(({ squadId, formation, index }) => {
                 const squad = squads.find(s => s.id === squadId);
                 if (!squad) return null;
                 
@@ -326,9 +348,9 @@ const MatchTools = () => {
                   <div key={squadId} className="space-y-2">
                     <h3 className="font-medium text-[#333446] flex items-center gap-2">
                       {index === 0 ? '🔴' : '🔵'} {squad.name}
-                      {selectedFormation && (
+                      {formation && (
                         <span className="text-sm text-[#7F8CAA] ml-auto">
-                          Formation: {selectedFormation}
+                          Formation: {formation}
                         </span>
                       )}
                     </h3>
