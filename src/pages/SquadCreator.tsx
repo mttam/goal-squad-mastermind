@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +7,10 @@ import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { generateSquad } from '@/utils/rankings';
 import { MatchMode, Player } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
+import PlayerManager from '@/components/PlayerManager';
 
 const SquadCreator = () => {
-  const { players, addSquad } = useFantacalcietto();
+  const { players, addSquad, replacePlayerInSquad } = useFantacalcietto();
   const { toast } = useToast();
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedFormation, setSelectedFormation] = useState('');
@@ -38,6 +38,19 @@ const SquadCreator = () => {
       title: "Squads Generated! ⚽",
       description: `Created balanced teams for ${selectedMode} mode`,
     });
+  };
+
+  const handleReplacePlayer = (teamIndex: 0 | 1, oldPlayer: Player, newPlayer: Player) => {
+    if (!generatedTeams) return;
+    
+    const updatedTeams = { ...generatedTeams };
+    if (teamIndex === 0) {
+      updatedTeams.teamA = updatedTeams.teamA.map(p => p.id === oldPlayer.id ? newPlayer : p);
+    } else {
+      updatedTeams.teamB = updatedTeams.teamB.map(p => p.id === oldPlayer.id ? newPlayer : p);
+    }
+    
+    setGeneratedTeams(updatedTeams);
   };
 
   const handleSaveSquads = () => {
@@ -191,9 +204,24 @@ const SquadCreator = () => {
                         <div className="text-sm text-[#7F8CAA]">{player.position}</div>
                       </div>
                     </div>
-                    <div className="text-right text-sm text-[#7F8CAA]">
-                      <div>⚽ {player.goals}</div>
-                      <div>🎯 {player.assists}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right text-sm text-[#7F8CAA]">
+                        <div>⚽ {player.goals}</div>
+                        <div>🎯 {player.assists}</div>
+                      </div>
+                      <PlayerManager
+                        currentPlayer={player}
+                        onPlayerReplace={(newPlayer) => handleReplacePlayer(0, player, newPlayer)}
+                        trigger={
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]"
+                          >
+                            🔄
+                          </Button>
+                        }
+                      />
                     </div>
                   </div>
                 ))}
@@ -234,9 +262,24 @@ const SquadCreator = () => {
                         <div className="text-sm text-[#7F8CAA]">{player.position}</div>
                       </div>
                     </div>
-                    <div className="text-right text-sm text-[#7F8CAA]">
-                      <div>⚽ {player.goals}</div>
-                      <div>🎯 {player.assists}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right text-sm text-[#7F8CAA]">
+                        <div>⚽ {player.goals}</div>
+                        <div>🎯 {player.assists}</div>
+                      </div>
+                      <PlayerManager
+                        currentPlayer={player}
+                        onPlayerReplace={(newPlayer) => handleReplacePlayer(1, player, newPlayer)}
+                        trigger={
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]"
+                          >
+                            🔄
+                          </Button>
+                        }
+                      />
                     </div>
                   </div>
                 ))}

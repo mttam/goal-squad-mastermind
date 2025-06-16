@@ -16,6 +16,9 @@ interface FantacalciettoContextType {
   addFormation: (formation: Formation) => void;
   addDue: (due: Due) => void;
   updateDue: (id: string, updates: Partial<Due>) => void;
+  addPlayer: (player: Player) => void;
+  updatePlayer: (id: string, updates: Partial<Player>) => void;
+  replacePlayerInSquad: (squadId: string, oldPlayerId: string, newPlayer: Player) => void;
 }
 
 const FantacalciettoContext = createContext<FantacalciettoContextType | undefined>(undefined);
@@ -50,6 +53,28 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
     setDues(prev => prev.map(due => due.id === id ? { ...due, ...updates } : due));
   };
 
+  const addPlayer = (player: Player) => {
+    setPlayers(prev => [...prev, player]);
+  };
+
+  const updatePlayer = (id: string, updates: Partial<Player>) => {
+    setPlayers(prev => prev.map(player => player.id === id ? { ...player, ...updates } : player));
+  };
+
+  const replacePlayerInSquad = (squadId: string, oldPlayerId: string, newPlayer: Player) => {
+    setSquads(prev => prev.map(squad => {
+      if (squad.id === squadId) {
+        return {
+          ...squad,
+          players: squad.players.map(player => 
+            player.id === oldPlayerId ? newPlayer : player
+          )
+        };
+      }
+      return squad;
+    }));
+  };
+
   return (
     <FantacalciettoContext.Provider value={{
       players,
@@ -64,6 +89,9 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
       addFormation,
       addDue,
       updateDue,
+      addPlayer,
+      updatePlayer,
+      replacePlayerInSquad,
     }}>
       {children}
     </FantacalciettoContext.Provider>

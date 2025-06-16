@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,9 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { MatchMode, Due } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
+import PlayerManager from '@/components/PlayerManager';
 
 const MatchTools = () => {
-  const { squads, dues, addDue, updateDue } = useFantacalcietto();
+  const { squads, dues, addDue, updateDue, replacePlayerInSquad } = useFantacalcietto();
   const { toast } = useToast();
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
@@ -234,6 +234,10 @@ const MatchTools = () => {
     }
   };
 
+  const handleReplacePlayerInSquad = (squadId: string, oldPlayer: Player, newPlayer: Player) => {
+    replacePlayerInSquad(squadId, oldPlayer.id, newPlayer);
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="text-center space-y-2">
@@ -358,11 +362,26 @@ const MatchTools = () => {
                       {squad.players.map((player) => (
                         <div 
                           key={player.id}
-                          className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF]"
+                          className="flex items-center justify-between p-2 rounded bg-[#EAEFEF]"
                         >
-                          <span>{getPositionEmoji(player.position)}</span>
-                          <span className="text-sm text-[#333446]">{player.name}</span>
-                          <span className="text-xs text-[#7F8CAA] ml-auto">{player.position}</span>
+                          <div className="flex items-center gap-2">
+                            <span>{getPositionEmoji(player.position)}</span>
+                            <span className="text-sm text-[#333446]">{player.name}</span>
+                            <span className="text-xs text-[#7F8CAA] ml-auto">{player.position}</span>
+                          </div>
+                          <PlayerManager
+                            currentPlayer={player}
+                            onPlayerReplace={(newPlayer) => handleReplacePlayerInSquad(squadId, player, newPlayer)}
+                            trigger={
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF] h-6 w-6 p-0"
+                              >
+                                🔄
+                              </Button>
+                            }
+                          />
                         </div>
                       ))}
                     </div>
