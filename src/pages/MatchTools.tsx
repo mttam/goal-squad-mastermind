@@ -41,6 +41,29 @@ const MatchTools = () => {
 
   const availableSquads = squads.filter(squad => squad.mode === selectedMode);
 
+  // Get all players from selected teams
+  const getAllPlayersFromSelectedTeams = () => {
+    const players = [];
+    
+    if (selectedSquadA) {
+      const teamA = squads.find(s => s.id === selectedSquadA);
+      if (teamA) {
+        players.push(...teamA.players.map(p => ({ ...p, team: teamA.name })));
+      }
+    }
+    
+    if (selectedSquadB) {
+      const teamB = squads.find(s => s.id === selectedSquadB);
+      if (teamB) {
+        players.push(...teamB.players.map(p => ({ ...p, team: teamB.name })));
+      }
+    }
+    
+    return players;
+  };
+
+  const availablePlayers = getAllPlayersFromSelectedTeams();
+
   const generateGoalkeepingRotations = () => {
     if (!selectedSquadA && !selectedSquadB) {
       toast({
@@ -344,13 +367,32 @@ const MatchTools = () => {
           {/* Add New Due */}
           <div className="grid md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="player-name">Player Name</Label>
-              <Input
-                id="player-name"
-                value={newDue.playerName}
-                onChange={(e) => setNewDue({...newDue, playerName: e.target.value})}
-                placeholder="Enter player name"
-              />
+              <Label htmlFor="player-select">Player</Label>
+              {availablePlayers.length > 0 ? (
+                <Select value={newDue.playerName} onValueChange={(value) => setNewDue({...newDue, playerName: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Player" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePlayers.map((player) => (
+                      <SelectItem key={player.id} value={player.name}>
+                        <div className="flex items-center gap-2">
+                          <span>{getPositionEmoji(player.position)}</span>
+                          <span>{player.name}</span>
+                          <span className="text-xs text-[#7F8CAA]">({player.team})</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  id="player-name"
+                  value={newDue.playerName}
+                  onChange={(e) => setNewDue({...newDue, playerName: e.target.value})}
+                  placeholder="Enter player name"
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="amount">Amount (€)</Label>
