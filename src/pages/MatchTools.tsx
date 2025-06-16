@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +15,7 @@ const MatchTools = () => {
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
+  const [selectedFormation, setSelectedFormation] = useState('');
   const [goalkeepingRotations, setGoalkeepingRotations] = useState<Array<{player: string, timeSlot: string, team: string}>>([]);
   
   // Due form state
@@ -31,6 +31,13 @@ const MatchTools = () => {
     { value: '7vs7', label: '7 vs 7', icon: '🤾' },
     { value: '8vs8', label: '8 vs 8', icon: '🏈' },
   ];
+
+  const formations = {
+    '5vs5': ['4-1', '3-2', '2-3', '1-4'],
+    '6vs6': ['4-2', '3-3', '2-4', '5-1'],
+    '7vs7': ['4-3', '3-4', '5-2', '2-5'],
+    '8vs8': ['4-4', '5-3', '3-5', '6-2'],
+  };
 
   const availableSquads = squads.filter(squad => squad.mode === selectedMode);
 
@@ -176,6 +183,23 @@ const MatchTools = () => {
             ))}
           </div>
 
+          {/* Formation Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="formation">Formation</Label>
+            <Select value={selectedFormation} onValueChange={setSelectedFormation}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Formation" />
+              </SelectTrigger>
+              <SelectContent>
+                {formations[selectedMode].map((formation) => (
+                  <SelectItem key={formation} value={formation}>
+                    ⚽ {formation}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Squad Selection */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -221,6 +245,11 @@ const MatchTools = () => {
                   <div key={squadId} className="space-y-2">
                     <h3 className="font-medium text-[#333446] flex items-center gap-2">
                       {index === 0 ? '🔴' : '🔵'} {squad.name}
+                      {selectedFormation && (
+                        <span className="text-sm text-[#7F8CAA] ml-auto">
+                          Formation: {selectedFormation}
+                        </span>
+                      )}
                     </h3>
                     <div className="space-y-1">
                       {squad.players.map((player) => (
@@ -393,52 +422,6 @@ const MatchTools = () => {
       </Card>
     </div>
   );
-
-  const handleAddDue = () => {
-    if (!newDue.playerName || !newDue.amount) {
-      toast({
-        title: "Error ❌",
-        description: "Please fill in player name and amount",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const due: Due = {
-      id: `due-${Date.now()}`,
-      playerName: newDue.playerName,
-      amount: parseFloat(newDue.amount),
-      description: newDue.description || 'Match fee',
-      paid: false,
-      date: new Date(),
-    };
-
-    addDue(due);
-    setNewDue({ playerName: '', amount: '', description: '' });
-    
-    toast({
-      title: "Due Added! 💰",
-      description: `Added €${due.amount} due for ${due.playerName}`,
-    });
-  };
-
-  const toggleDuePaid = (dueId: string, paid: boolean) => {
-    updateDue(dueId, { paid });
-    toast({
-      title: paid ? "Payment Recorded! ✅" : "Payment Unmarked ❌",
-      description: paid ? "Due marked as paid" : "Due marked as unpaid",
-    });
-  };
-
-  const getPositionEmoji = (position: string) => {
-    switch (position) {
-      case 'GK': return '🥅';
-      case 'DEF': return '🛡️';
-      case 'MID': return '⚙️';
-      case 'ATT': return '⚔️';
-      default: return '⚽';
-    }
-  };
 };
 
 export default MatchTools;

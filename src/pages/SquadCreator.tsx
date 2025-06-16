@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { generateSquad } from '@/utils/rankings';
 import { MatchMode, Player } from '@/types/fantacalcietto';
@@ -12,6 +13,7 @@ const SquadCreator = () => {
   const { players, addSquad } = useFantacalcietto();
   const { toast } = useToast();
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
+  const [selectedFormation, setSelectedFormation] = useState('');
   const [generatedTeams, setGeneratedTeams] = useState<{ teamA: Player[], teamB: Player[] } | null>(null);
 
   const modes = [
@@ -20,6 +22,13 @@ const SquadCreator = () => {
     { value: '7vs7', label: '7 vs 7', icon: '🤾' },
     { value: '8vs8', label: '8 vs 8', icon: '🏈' },
   ];
+
+  const formations = {
+    '5vs5': ['4-1', '3-2', '2-3', '1-4'],
+    '6vs6': ['4-2', '3-3', '2-4', '5-1'],
+    '7vs7': ['4-3', '3-4', '5-2', '2-5'],
+    '8vs8': ['4-4', '5-3', '3-5', '6-2'],
+  };
 
   const handleGenerateSquads = () => {
     const teams = generateSquad(players, selectedMode);
@@ -34,10 +43,12 @@ const SquadCreator = () => {
   const handleSaveSquads = () => {
     if (!generatedTeams) return;
 
+    const formationSuffix = selectedFormation ? ` (${selectedFormation})` : '';
+
     // Save Team A
     addSquad({
       id: `squad-${Date.now()}-a`,
-      name: `Team A - ${selectedMode}`,
+      name: `Team A - ${selectedMode}${formationSuffix}`,
       players: generatedTeams.teamA,
       mode: selectedMode,
       createdAt: new Date(),
@@ -46,7 +57,7 @@ const SquadCreator = () => {
     // Save Team B
     addSquad({
       id: `squad-${Date.now()}-b`,
-      name: `Team B - ${selectedMode}`,
+      name: `Team B - ${selectedMode}${formationSuffix}`,
       players: generatedTeams.teamB,
       mode: selectedMode,
       createdAt: new Date(),
@@ -86,7 +97,7 @@ const SquadCreator = () => {
       {/* Mode Selection */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
-          <CardTitle className="text-[#333446]">Select Match Mode</CardTitle>
+          <CardTitle className="text-[#333446]">Select Match Mode & Formation</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -105,6 +116,23 @@ const SquadCreator = () => {
                 <span className="text-sm font-medium">{mode.label}</span>
               </Button>
             ))}
+          </div>
+
+          {/* Formation Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="formation">Formation (Optional)</Label>
+            <Select value={selectedFormation} onValueChange={setSelectedFormation}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Formation" />
+              </SelectTrigger>
+              <SelectContent>
+                {formations[selectedMode].map((formation) => (
+                  <SelectItem key={formation} value={formation}>
+                    ⚽ {formation}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="flex gap-4">
@@ -135,6 +163,11 @@ const SquadCreator = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-[#333446]">
                 🔴 Team A
+                {selectedFormation && (
+                  <span className="text-sm text-[#7F8CAA] ml-auto">
+                    Formation: {selectedFormation}
+                  </span>
+                )}
               </CardTitle>
               <div className="text-sm text-[#7F8CAA]">
                 {(() => {
@@ -173,6 +206,11 @@ const SquadCreator = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-[#333446]">
                 🔵 Team B
+                {selectedFormation && (
+                  <span className="text-sm text-[#7F8CAA] ml-auto">
+                    Formation: {selectedFormation}
+                  </span>
+                )}
               </CardTitle>
               <div className="text-sm text-[#7F8CAA]">
                 {(() => {
