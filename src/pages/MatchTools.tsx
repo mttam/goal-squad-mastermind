@@ -156,6 +156,64 @@ const MatchTools = () => {
     });
   };
 
+  const createDuesForAllPlayers = () => {
+    if (availablePlayers.length === 0) {
+      toast({
+        title: "Error ❌",
+        description: "Please select teams first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!newDue.amount) {
+      toast({
+        title: "Error ❌",
+        description: "Please enter an amount first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const amount = parseFloat(newDue.amount);
+    const description = newDue.description || 'Match fee';
+    let addedCount = 0;
+
+    availablePlayers.forEach((player) => {
+      // Check if player already has a due with the same description
+      const existingDue = dues.find(due => 
+        due.playerName === player.name && 
+        due.description === description &&
+        !due.paid
+      );
+
+      if (!existingDue) {
+        const due: Due = {
+          id: `due-${Date.now()}-${player.id}`,
+          playerName: player.name,
+          amount: amount,
+          description: description,
+          paid: false,
+          date: new Date(),
+        };
+        addDue(due);
+        addedCount++;
+      }
+    });
+
+    if (addedCount > 0) {
+      toast({
+        title: "Dues Added! 💰",
+        description: `Added €${amount} dues for ${addedCount} players`,
+      });
+    } else {
+      toast({
+        title: "No Dues Added ⚠️",
+        description: "All players already have unpaid dues with this description",
+      });
+    }
+  };
+
   const toggleDuePaid = (dueId: string, paid: boolean) => {
     updateDue(dueId, { paid });
     toast({
@@ -413,12 +471,25 @@ const MatchTools = () => {
                 placeholder="Match fee"
               />
             </div>
-            <div className="flex items-end">
-              <Button onClick={handleAddDue} className="w-full bg-[#333446] text-white hover:bg-[#7F8CAA]">
+            <div className="flex items-end gap-2">
+              <Button onClick={handleAddDue} className="flex-1 bg-[#333446] text-white hover:bg-[#7F8CAA]">
                 Add Due 💰
               </Button>
             </div>
           </div>
+
+          {/* Auto-create dues for all players */}
+          {availablePlayers.length > 0 && (
+            <div className="flex justify-center">
+              <Button 
+                onClick={createDuesForAllPlayers}
+                variant="outline"
+                className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]"
+              >
+                Create Dues for All Players ({availablePlayers.length}) 🎯
+              </Button>
+            </div>
+          )}
 
           {/* Dues Table */}
           {dues.length > 0 && (
