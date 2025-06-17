@@ -1,18 +1,7 @@
 
 import { Player } from '@/types/fantacalcietto';
 
-const names = [
-  'Marco Rossi', 'Luca Bianchi', 'Andrea Ferrari', 'Matteo Romano', 'Francesco Ricci',
-  'Alessandro Marino', 'Davide Greco', 'Simone Bruno', 'Lorenzo Villa', 'Gabriele Conti',
-  'Roberto Mancini', 'Antonio Esposito', 'Giuseppe Barbieri', 'Stefano Costa', 'Fabio Rizzo',
-  'Daniele Fontana', 'Michele Santoro', 'Paolo Caruso', 'Giovanni Fabbri', 'Nicola Serra',
-  'Emanuele Pellegrini', 'Cristiano Galli', 'Federico Lombardi', 'Riccardo Martinelli', 'Vincenzo Sorrentino',
-  'Alberto Parisi', 'Claudio Rossini', 'Mauro Benedetti', 'Sergio Moretti', 'Enrico Ferretti',
-  'Massimo De Santis', 'Diego Cattaneo', 'Gianluca Monti', 'Pierluigi Rizzi', 'Salvatore Giordano',
-  'Tommaso Negri', 'Leonardo Donati', 'Alessio Marchetti', 'Marco Valentini', 'Luca De Angelis',
-  'Andrea Silvestri', 'Matteo Farina', 'Francesco Orlandi', 'Alessandro Vitali', 'Davide Pagano',
-  'Simone Ferrara', 'Lorenzo Guerra', 'Gabriele Fiorentino', 'Roberto Ferri', 'Antonio Gatti'
-];
+const names = ['Placeholder'];
 
 const positions: Array<'GK' | 'DEF' | 'MID' | 'ATT'> = ['GK', 'DEF', 'MID', 'ATT'];
 
