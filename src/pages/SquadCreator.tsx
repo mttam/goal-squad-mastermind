@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { generateSquad } from '@/utils/rankings';
 import { MatchMode, Player } from '@/types/fantacalcietto';
@@ -14,6 +15,7 @@ const SquadCreator = () => {
   const { toast } = useToast();
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedFormation, setSelectedFormation] = useState('');
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [generatedTeams, setGeneratedTeams] = useState<{ teamA: Player[], teamB: Player[] } | null>(null);
 
   const modes = [
@@ -30,13 +32,57 @@ const SquadCreator = () => {
     '8vs8': ['4-4', '5-3', '3-5', '6-2'],
   };
 
+  const handlePlayerSelection = (playerId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedPlayers(prev => [...prev, playerId]);
+    } else {
+      setSelectedPlayers(prev => prev.filter(id => id !== playerId));
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPlayers.length === players.length) {
+      setSelectedPlayers([]);
+    } else {
+      setSelectedPlayers(players.map(p => p.id));
+    }
+  };
+
   const handleGenerateSquads = () => {
-    const teams = generateSquad(players, selectedMode);
+    if (selectedPlayers.length === 0) {
+      toast({
+        title: "No Players Selected ❌",
+        description: "Please select at least some players to generate teams",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const playersPerTeam = {
+      '5vs5': 5,
+      '6vs6': 6,
+      '7vs7': 7,
+      '8vs8': 8,
+    }[selectedMode] || 5;
+
+    const totalRequired = playersPerTeam * 2;
+    
+    if (selectedPlayers.length < totalRequired) {
+      toast({
+        title: "Not Enough Players ❌",
+        description: `You need at least ${totalRequired} players for ${selectedMode} mode (${playersPerTeam} per team)`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const availablePlayers = players.filter(p => selectedPlayers.includes(p.id));
+    const teams = generateSquad(availablePlayers, selectedMode);
     setGeneratedTeams(teams);
     
     toast({
       title: "Squads Generated! ⚽",
-      description: `Created balanced teams for ${selectedMode} mode`,
+      description: `Created balanced teams for ${selectedMode} mode from ${selectedPlayers.length} selected players`,
     });
   };
 
@@ -147,11 +193,66 @@ const SquadCreator = () => {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Player Selection */}
+      <Card className="bg-white border-[#B8CFCE]">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between text-[#333446]">
+            Select Available Players
+            <div className="text-sm text-[#7F8CAA]">
+              {selectedPlayers.length} of {players.length} selected
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex justify-between items-center">
+            <Button
+              onClick={handleSelectAll}
+              variant="outline"
+              className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]"
+            >
+              {selectedPlayers.length === players.length ? 'Deselect All' : 'Select All'}
+            </Button>
+            <div className="text-sm text-[#7F8CAA]">
+              Required for {selectedMode}: {(() => {
+                const playersPerTeam = { '5vs5': 5, '6vs6': 6, '7vs7': 7, '8vs8': 8 }[selectedMode] || 5;
+                return playersPerTeam * 2;
+              })()} players minimum
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+            {players.map((player) => (
+              <div 
+                key={player.id}
+                className="flex items-center space-x-3 p-3 rounded-lg bg-[#EAEFEF] hover:bg-[#B8CFCE] transition-colors"
+              >
+                <Checkbox
+                  checked={selectedPlayers.includes(player.id)}
+                  onCheckedChange={(checked) => handlePlayerSelection(player.id, checked as boolean)}
+                />
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="text-lg">{getPositionEmoji(player.position)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-[#333446] truncate">{player.name}</div>
+                    <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                  </div>
+                  <div className="text-xs text-[#7F8CAA] text-right">
+                    <div>⚽ {player.goals}</div>
+                    <div>🎯 {player.assists}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
           
           <div className="flex gap-4">
             <Button 
               onClick={handleGenerateSquads}
               className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
+              disabled={selectedPlayers.length === 0}
             >
               Generate Squads 🎲
             </Button>
