@@ -33,6 +33,7 @@ export interface Due {
   description: string;
   paid: boolean;
   date: Date;
+  rest?: number; // Amount still owed
 }
 
 export type MatchMode = '5vs5' | '6vs6' | '7vs7' | '8vs8';

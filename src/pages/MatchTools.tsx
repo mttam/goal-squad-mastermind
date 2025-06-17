@@ -1,12 +1,12 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
-import { Player, Squad, Formation } from '@/types/fantacalcietto';
+import { Player, Squad, Formation, Due, MatchMode } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
 import PlayerManager from '@/components/PlayerManager';
 
@@ -25,6 +25,7 @@ const MatchTools = () => {
     playerName: '',
     amount: '',
     description: '',
+    rest: '',
   });
 
   const modes = [
@@ -140,17 +141,21 @@ const MatchTools = () => {
       return;
     }
 
+    const amount = parseFloat(newDue.amount);
+    const rest = newDue.rest ? parseFloat(newDue.rest) : amount;
+
     const due: Due = {
       id: `due-${Date.now()}`,
       playerName: newDue.playerName,
-      amount: parseFloat(newDue.amount),
+      amount: amount,
       description: newDue.description || 'Match fee',
       paid: false,
       date: new Date(),
+      rest: rest,
     };
 
     addDue(due);
-    setNewDue({ playerName: '', amount: '', description: '' });
+    setNewDue({ playerName: '', amount: '', description: '', rest: '' });
     
     toast({
       title: "Due Added! 💰",
@@ -178,6 +183,7 @@ const MatchTools = () => {
     }
 
     const amount = parseFloat(newDue.amount);
+    const rest = newDue.rest ? parseFloat(newDue.rest) : amount;
     const description = newDue.description || 'Match fee';
     let addedCount = 0;
 
@@ -197,6 +203,7 @@ const MatchTools = () => {
           description: description,
           paid: false,
           date: new Date(),
+          rest: rest,
         };
         addDue(due);
         addedCount++;
@@ -223,6 +230,19 @@ const MatchTools = () => {
       description: paid ? "Due marked as paid" : "Due marked as unpaid",
     });
   };
+
+  const updateDueRest = (dueId: string, newRest: number) => {
+    updateDue(dueId, { rest: newRest });
+    toast({
+      title: "Rest Amount Updated! 💰",
+      description: `Updated remaining amount to €${newRest.toFixed(2)}`,
+    });
+  };
+
+  // Calculate totals
+  const totalAmountToPay = dues.reduce((sum, due) => sum + due.amount, 0);
+  const totalPaid = dues.reduce((sum, due) => sum + (due.paid ? due.amount : 0), 0);
+  const totalRest = dues.reduce((sum, due) => sum + (due.rest || due.amount), 0);
 
   const getPositionEmoji = (position: string) => {
     switch (position) {
@@ -463,8 +483,26 @@ const MatchTools = () => {
           <CardTitle className="text-[#333446]">Dues Management 💰</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Financial Summary */}
+          {dues.length > 0 && (
+            <div className="grid grid-cols-3 gap-4 p-4 bg-[#EAEFEF] rounded-lg">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-[#333446]">€{totalAmountToPay.toFixed(2)}</div>
+                <div className="text-sm text-[#7F8CAA]">Total Amount</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">€{totalPaid.toFixed(2)}</div>
+                <div className="text-sm text-[#7F8CAA]">Total Paid</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">€{totalRest.toFixed(2)}</div>
+                <div className="text-sm text-[#7F8CAA]">Total Remaining</div>
+              </div>
+            </div>
+          )}
+
           {/* Add New Due */}
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-5 gap-4">
             <div className="space-y-2">
               <Label htmlFor="player-select">Player</Label>
               {availablePlayers.length > 0 ? (
@@ -504,6 +542,16 @@ const MatchTools = () => {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="rest">Rest (€)</Label>
+              <Input
+                id="rest"
+                type="number"
+                value={newDue.rest}
+                onChange={(e) => setNewDue({...newDue, rest: e.target.value})}
+                placeholder="0.00"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
@@ -539,6 +587,7 @@ const MatchTools = () => {
                 <TableRow>
                   <TableHead className="text-[#333446]">Player</TableHead>
                   <TableHead className="text-[#333446]">Amount</TableHead>
+                  <TableHead className="text-[#333446]">Rest</TableHead>
                   <TableHead className="text-[#333446]">Description</TableHead>
                   <TableHead className="text-[#333446]">Status</TableHead>
                   <TableHead className="text-[#333446]">Action</TableHead>
@@ -549,6 +598,15 @@ const MatchTools = () => {
                   <TableRow key={due.id}>
                     <TableCell className="font-medium text-[#333446]">{due.playerName}</TableCell>
                     <TableCell>€{due.amount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={due.rest || due.amount}
+                        onChange={(e) => updateDueRest(due.id, parseFloat(e.target.value) || 0)}
+                        className="w-20 text-sm"
+                        step="0.01"
+                      />
+                    </TableCell>
                     <TableCell className="text-[#7F8CAA]">{due.description}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
