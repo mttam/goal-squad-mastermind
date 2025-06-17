@@ -25,7 +25,6 @@ const MatchTools = () => {
     playerName: '',
     amount: '',
     description: '',
-    rest: '',
   });
 
   const modes = [
@@ -142,7 +141,6 @@ const MatchTools = () => {
     }
 
     const amount = parseFloat(newDue.amount);
-    const rest = newDue.rest ? parseFloat(newDue.rest) : amount;
 
     const due: Due = {
       id: `due-${Date.now()}`,
@@ -151,11 +149,11 @@ const MatchTools = () => {
       description: newDue.description || 'Match fee',
       paid: false,
       date: new Date(),
-      rest: rest,
+      rest: amount,
     };
 
     addDue(due);
-    setNewDue({ playerName: '', amount: '', description: '', rest: '' });
+    setNewDue({ playerName: '', amount: '', description: '' });
     
     toast({
       title: "Due Added! 💰",
@@ -183,7 +181,6 @@ const MatchTools = () => {
     }
 
     const amount = parseFloat(newDue.amount);
-    const rest = newDue.rest ? parseFloat(newDue.rest) : amount;
     const description = newDue.description || 'Match fee';
     let addedCount = 0;
 
@@ -203,7 +200,7 @@ const MatchTools = () => {
           description: description,
           paid: false,
           date: new Date(),
-          rest: rest,
+          rest: amount,
         };
         addDue(due);
         addedCount++;
@@ -228,14 +225,6 @@ const MatchTools = () => {
     toast({
       title: paid ? "Payment Recorded! ✅" : "Payment Unmarked ❌",
       description: paid ? "Due marked as paid" : "Due marked as unpaid",
-    });
-  };
-
-  const updateDueRest = (dueId: string, newRest: number) => {
-    updateDue(dueId, { rest: newRest });
-    toast({
-      title: "Rest Amount Updated! 💰",
-      description: `Updated remaining amount to €${newRest.toFixed(2)}`,
     });
   };
 
@@ -527,7 +516,7 @@ const MatchTools = () => {
           )}
 
           {/* Add New Due */}
-          <div className="grid md:grid-cols-5 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="player-select">Player</Label>
               {availablePlayers.length > 0 ? (
@@ -567,16 +556,6 @@ const MatchTools = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="rest">Rest (€)</Label>
-              <Input
-                id="rest"
-                type="number"
-                value={newDue.rest}
-                onChange={(e) => setNewDue({...newDue, rest: e.target.value})}
-                placeholder="0.00"
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
@@ -612,7 +591,6 @@ const MatchTools = () => {
                 <TableRow>
                   <TableHead className="text-[#333446]">Player</TableHead>
                   <TableHead className="text-[#333446]">Amount</TableHead>
-                  <TableHead className="text-[#333446]">Rest</TableHead>
                   <TableHead className="text-[#333446]">Actual Paid</TableHead>
                   <TableHead className="text-[#333446]">Change</TableHead>
                   <TableHead className="text-[#333446]">Description</TableHead>
@@ -625,15 +603,6 @@ const MatchTools = () => {
                   <TableRow key={due.id}>
                     <TableCell className="font-medium text-[#333446]">{due.playerName}</TableCell>
                     <TableCell>€{due.amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={due.rest || due.amount}
-                        onChange={(e) => updateDueRest(due.id, parseFloat(e.target.value) || 0)}
-                        className="w-20 text-sm"
-                        step="0.01"
-                      />
-                    </TableCell>
                     <TableCell>
                       <Input
                         type="number"

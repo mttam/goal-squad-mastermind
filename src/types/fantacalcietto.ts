@@ -34,6 +34,8 @@ export interface Due {
   paid: boolean;
   date: Date;
   rest?: number; // Amount still owed
+  actualPaid?: number; // Actual amount received
+  change?: number; // Change to give back
 }
 
 export type MatchMode = '5vs5' | '6vs6' | '7vs7' | '8vs8';
