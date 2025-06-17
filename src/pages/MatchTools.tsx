@@ -93,12 +93,9 @@ const MatchTools = () => {
     // Generate rotations for Team A
     const shuffledTeamA = [...teamA.players].sort(() => Math.random() - 0.5);
     for (let i = 0; i < shuffledTeamA.length; i++) {
-      const startMinute = i * 5;
-      const endMinute = (i + 1) * 5;
-      
       rotations.push({
         player: shuffledTeamA[i].name,
-        timeSlot: `${startMinute}' - ${endMinute}'`,
+        timeSlot: `${i + 1}`,
         team: teamA.name
       });
     }
@@ -106,27 +103,24 @@ const MatchTools = () => {
     // Generate rotations for Team B
     const shuffledTeamB = [...teamB.players].sort(() => Math.random() - 0.5);
     for (let i = 0; i < shuffledTeamB.length; i++) {
-      const startMinute = i * 5;
-      const endMinute = (i + 1) * 5;
-      
       rotations.push({
         player: shuffledTeamB[i].name,
-        timeSlot: `${startMinute}' - ${endMinute}'`,
+        timeSlot: `${i + 1}`,
         team: teamB.name
       });
     }
     
-    // Sort rotations by start time
+    // Sort rotations by number
     rotations.sort((a, b) => {
-      const aStart = parseInt(a.timeSlot.split("'")[0]);
-      const bStart = parseInt(b.timeSlot.split("'")[0]);
+      const aStart = parseInt(a.timeSlot);
+      const bStart = parseInt(b.timeSlot);
       return aStart - bStart;
     });
     
     setGoalkeepingRotations(rotations);
     toast({
       title: "Goalkeeper Rotations Generated! 🥅",
-      description: `5-minute goalkeeper rotations created for both teams`,
+      description: `Sequential goalkeeper rotations created for both teams`,
     });
   };
 
@@ -436,11 +430,11 @@ const MatchTools = () => {
           </Button>
           
           {goalkeepingRotations.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h3 className="font-medium text-[#333446]">Goalkeeper Rotation Schedule:</h3>
               
               {/* Show rotations divided by team */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-3">
                 {[selectedSquadA, selectedSquadB].map((squadId, index) => {
                   const squad = squads.find(s => s.id === squadId);
                   if (!squad) return null;
@@ -449,24 +443,24 @@ const MatchTools = () => {
                   
                   return (
                     <div key={squadId} className="space-y-2">
-                      <h4 className="font-medium text-[#333446] flex items-center gap-2">
+                      <h4 className="font-medium text-[#333446] flex items-center gap-2 text-sm">
                         {index === 0 ? '🔴' : '🔵'} {squad.name} - Goalkeeper Schedule
                       </h4>
-                      <div className="max-h-96 overflow-y-auto">
+                      <div className="max-h-64 overflow-y-auto border rounded-md">
                         <Table>
                           <TableHeader>
-                            <TableRow>
-                              <TableHead className="text-[#333446]">Time Slot</TableHead>
-                              <TableHead className="text-[#333446]">Goalkeeper</TableHead>
+                            <TableRow className="bg-[#EAEFEF]">
+                              <TableHead className="text-[#333446] py-2 text-sm">Order</TableHead>
+                              <TableHead className="text-[#333446] py-2 text-sm">Goalkeeper</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {teamRotations.map((rotation, rotIndex) => (
-                              <TableRow key={rotIndex}>
-                                <TableCell className="font-medium text-[#333446]">
-                                  🥅 {rotation.timeSlot}
+                              <TableRow key={rotIndex} className="hover:bg-[#EAEFEF]/50">
+                                <TableCell className="font-medium text-[#333446] py-2 text-sm">
+                                  🥅 #{rotation.timeSlot}
                                 </TableCell>
-                                <TableCell className="text-[#7F8CAA]">
+                                <TableCell className="text-[#7F8CAA] py-2 text-sm">
                                   {rotation.player}
                                 </TableCell>
                               </TableRow>
