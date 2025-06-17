@@ -40,7 +40,7 @@ export const generateSquad = (players: Player[], mode: string): { teamA: Player[
   const result: Player[] = [];
 
   // 10% Best Defender (Voting)
-  const defenderCount = Math.ceil(totalPlayers * 0.1);
+  const defenderCount = Math.ceil(totalPlayers * 0.3);
   for (let i = 0; i < defenderCount && i < defenders.length; i++) {
     if (!selectedPlayers.has(defenders[i])) {
       selectedPlayers.add(defenders[i]);
@@ -49,7 +49,7 @@ export const generateSquad = (players: Player[], mode: string): { teamA: Player[
   }
 
   // 30% Best Defender (by Assist facts) - using nonGK saves
-  const defAssistCount = Math.ceil(totalPlayers * 0.3);
+  const defAssistCount = Math.ceil(totalPlayers * 0.1);
   for (let i = 0; i < defAssistCount && i < nonGKs.length; i++) {
     if (!selectedPlayers.has(nonGKs[i])) {
       selectedPlayers.add(nonGKs[i]);
