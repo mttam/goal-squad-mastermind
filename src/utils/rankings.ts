@@ -83,7 +83,7 @@ export const generateSquad = (players: Player[], mode: string): { teamA: Player[
   }
 
   // Split into two teams
-  const shuffled = [...result].sort(() => Math.random() - 0.5);
+  const shuffled = [...result].sort(() => Math.random() - 0.2);
   return {
     teamA: shuffled.slice(0, playersPerTeam),
     teamB: shuffled.slice(playersPerTeam, totalPlayers),
