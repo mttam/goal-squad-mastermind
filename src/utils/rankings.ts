@@ -30,62 +30,121 @@ export const generateSquad = (players: Player[], mode: string): { teamA: Player[
 
   const totalPlayers = playersPerTeam * 2;
   
-  // Get top players from different categories
-  const goleadors = getRankedPlayers(players, 'goleador');
-  const assistmen = getRankedPlayers(players, 'assistman');
-  const defenders = getRankedPlayers(players, 'bestDefender');
-  const nonGKs = getRankedPlayers(players, 'bestnonGK');
-
-  const selectedPlayers = new Set<Player>();
-  const result: Player[] = [];
-
-  // 10% Best Defender (Voting)
-  const defenderCount = Math.ceil(totalPlayers * 0.3);
-  for (let i = 0; i < defenderCount && i < defenders.length; i++) {
-    if (!selectedPlayers.has(defenders[i])) {
-      selectedPlayers.add(defenders[i]);
-      result.push(defenders[i]);
-    }
+  if (players.length < totalPlayers) {
+    throw new Error(`Non ci sono abbastanza giocatori per il modo ${mode}`);
   }
 
-  // 30% Best Defender (by Assist facts) - using nonGK saves
-  const defAssistCount = Math.ceil(totalPlayers * 0.1);
-  for (let i = 0; i < defAssistCount && i < nonGKs.length; i++) {
-    if (!selectedPlayers.has(nonGKs[i])) {
-      selectedPlayers.add(nonGKs[i]);
-      result.push(nonGKs[i]);
-    }
-  }
-
-  // 30% Assistman
-  const assistCount = Math.ceil(totalPlayers * 0.3);
-  for (let i = 0; i < assistCount && i < assistmen.length; i++) {
-    if (!selectedPlayers.has(assistmen[i])) {
-      selectedPlayers.add(assistmen[i]);
-      result.push(assistmen[i]);
-    }
-  }
-
-  // 30% Goleador
-  const goalCount = Math.ceil(totalPlayers * 0.3);
-  for (let i = 0; i < goalCount && i < goleadors.length; i++) {
-    if (!selectedPlayers.has(goleadors[i])) {
-      selectedPlayers.add(goleadors[i]);
-      result.push(goleadors[i]);
-    }
-  }
-
-  // Fill remaining spots with random players
-  const remainingPlayers = players.filter(p => !selectedPlayers.has(p));
-  while (result.length < totalPlayers && remainingPlayers.length > 0) {
-    const randomIndex = Math.floor(Math.random() * remainingPlayers.length);
-    result.push(remainingPlayers.splice(randomIndex, 1)[0]);
-  }
-
-  // Split into two teams
-  const shuffled = [...result].sort(() => Math.random() - 0.2);
-  return {
-    teamA: shuffled.slice(0, playersPerTeam),
-    teamB: shuffled.slice(playersPerTeam, totalPlayers),
+  // Prendi solo i giocatori necessari
+  const selectedPlayers = players.slice(0, totalPlayers);
+  
+  // Funzione per calcolare le medie di una squadra
+  const calculateTeamStats = (team: Player[]) => {
+    if (team.length === 0) return { goals: 0, assists: 0, saves: 0, defenderVoting: 0 };
+    
+    return {
+      goals: team.reduce((sum, p) => sum + p.goals, 0) / team.length,
+      assists: team.reduce((sum, p) => sum + p.assists, 0) / team.length,
+      saves: team.reduce((sum, p) => sum + p.saves, 0) / team.length,
+      defenderVoting: team.reduce((sum, p) => sum + p.defenderVoting, 0) / team.length
+    };
   };
+
+  // Funzione per calcolare la differenza tra due squadre
+  const calculateStatsDifference = (team1: Player[], team2: Player[]) => {
+    const stats1 = calculateTeamStats(team1);
+    const stats2 = calculateTeamStats(team2);
+    
+    return {
+      goals: Math.abs(stats1.goals - stats2.goals),
+      assists: Math.abs(stats1.assists - stats2.assists),
+      saves: Math.abs(stats1.saves - stats2.saves),
+      defenderVoting: Math.abs(stats1.defenderVoting - stats2.defenderVoting)
+    };
+  };
+
+  // Funzione per verificare se le squadre sono bilanciate (scarto max 0.2)
+  const areTeamsBalanced = (team1: Player[], team2: Player[]) => {
+    const diff = calculateStatsDifference(team1, team2);
+    const maxDiff = 0.2;
+    
+    return diff.goals <= maxDiff && 
+           diff.assists <= maxDiff && 
+           diff.saves <= maxDiff && 
+           diff.defenderVoting <= maxDiff;
+  };
+
+  // Algoritmo per creare squadre bilanciate
+  const createBalancedTeams = (players: Player[]): { teamA: Player[], teamB: Player[] } => {
+    // Ordina i giocatori per una metrica combinata (più forti prima)
+    const sortedPlayers = [...players].sort((a, b) => {
+      const scoreA = (a.goals + a.assists + a.saves + a.defenderVoting) / 4;
+      const scoreB = (b.goals + b.assists + b.saves + b.defenderVoting) / 4;
+      return scoreB - scoreA;
+    });
+
+    const team1: Player[] = [];
+    const team2: Player[] = [];
+
+    // Distribuzione alternata iniziale (draft style)
+    for (let i = 0; i < sortedPlayers.length; i++) {
+      if (i % 2 === 0) {
+        team1.push(sortedPlayers[i]);
+      } else {
+        team2.push(sortedPlayers[i]);
+      }
+    }
+
+    return { teamA: team1, teamB: team2 };
+  };
+
+  // Algoritmo di ottimizzazione per migliorare il bilanciamento
+  const optimizeTeams = (teamA: Player[], teamB: Player[]): { teamA: Player[], teamB: Player[] } => {
+    let bestTeamA = [...teamA];
+    let bestTeamB = [...teamB];
+    let bestDiff = calculateStatsDifference(teamA, teamB);
+    let bestScore = bestDiff.goals + bestDiff.assists + bestDiff.saves + bestDiff.defenderVoting;
+
+    // Prova a scambiare giocatori per migliorare il bilanciamento
+    for (let i = 0; i < teamA.length; i++) {
+      for (let j = 0; j < teamB.length; j++) {
+        // Crea squadre temporanee con giocatori scambiati
+        const tempTeamA = [...teamA];
+        const tempTeamB = [...teamB];
+        
+        // Scambia i giocatori
+        const temp = tempTeamA[i];
+        tempTeamA[i] = tempTeamB[j];
+        tempTeamB[j] = temp;
+
+        // Calcola il nuovo punteggio di differenza
+        const tempDiff = calculateStatsDifference(tempTeamA, tempTeamB);
+        const tempScore = tempDiff.goals + tempDiff.assists + tempDiff.saves + tempDiff.defenderVoting;
+
+        // Se questo scambio migliora il bilanciamento, salvalo
+        if (tempScore < bestScore) {
+          bestTeamA = [...tempTeamA];
+          bestTeamB = [...tempTeamB];
+          bestDiff = tempDiff;
+          bestScore = tempScore;
+        }
+      }
+    }
+
+    return { teamA: bestTeamA, teamB: bestTeamB };
+  };
+
+  // Crea le squadre iniziali
+  let result = createBalancedTeams(selectedPlayers);
+
+  // Ottimizza il bilanciamento con più iterazioni
+  for (let iteration = 0; iteration < 10; iteration++) {
+    result = optimizeTeams(result.teamA, result.teamB);
+    
+    // Se le squadre sono già bilanciate, esci dal loop
+    if (areTeamsBalanced(result.teamA, result.teamB)) {
+      break;
+    }
+  }
+
+  return result;
 };
