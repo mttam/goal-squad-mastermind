@@ -239,10 +239,27 @@ const MatchTools = () => {
     });
   };
 
+  const updateDueActualPaid = (dueId: string, actualPaid: number) => {
+    const due = dues.find(d => d.id === dueId);
+    if (due) {
+      const change = actualPaid - due.amount;
+      updateDue(dueId, { actualPaid, change });
+      
+      if (change > 0) {
+        toast({
+          title: "Payment with Change! 💰",
+          description: `€${change.toFixed(2)} change to give back`,
+        });
+      }
+    }
+  };
+
   // Calculate totals
   const totalAmountToPay = dues.reduce((sum, due) => sum + due.amount, 0);
   const totalPaid = dues.reduce((sum, due) => sum + (due.paid ? due.amount : 0), 0);
   const totalRest = dues.reduce((sum, due) => sum + (due.rest || due.amount), 0);
+  const totalActualPaid = dues.reduce((sum, due) => sum + (due.actualPaid || 0), 0);
+  const totalChange = dues.reduce((sum, due) => sum + (due.change || 0), 0);
 
   const getPositionEmoji = (position: string) => {
     switch (position) {
@@ -483,9 +500,9 @@ const MatchTools = () => {
           <CardTitle className="text-[#333446]">Dues Management 💰</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Financial Summary */}
+          {/* Enhanced Financial Summary */}
           {dues.length > 0 && (
-            <div className="grid grid-cols-3 gap-4 p-4 bg-[#EAEFEF] rounded-lg">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-[#EAEFEF] rounded-lg">
               <div className="text-center">
                 <div className="text-2xl font-bold text-[#333446]">€{totalAmountToPay.toFixed(2)}</div>
                 <div className="text-sm text-[#7F8CAA]">Total Amount</div>
@@ -497,6 +514,14 @@ const MatchTools = () => {
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-600">€{totalRest.toFixed(2)}</div>
                 <div className="text-sm text-[#7F8CAA]">Total Remaining</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">€{totalActualPaid.toFixed(2)}</div>
+                <div className="text-sm text-[#7F8CAA]">Actual Received</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">€{totalChange.toFixed(2)}</div>
+                <div className="text-sm text-[#7F8CAA]">Total Change</div>
               </div>
             </div>
           )}
@@ -580,7 +605,7 @@ const MatchTools = () => {
             </div>
           )}
 
-          {/* Dues Table */}
+          {/* Enhanced Dues Table */}
           {dues.length > 0 && (
             <Table>
               <TableHeader>
@@ -588,6 +613,8 @@ const MatchTools = () => {
                   <TableHead className="text-[#333446]">Player</TableHead>
                   <TableHead className="text-[#333446]">Amount</TableHead>
                   <TableHead className="text-[#333446]">Rest</TableHead>
+                  <TableHead className="text-[#333446]">Actual Paid</TableHead>
+                  <TableHead className="text-[#333446]">Change</TableHead>
                   <TableHead className="text-[#333446]">Description</TableHead>
                   <TableHead className="text-[#333446]">Status</TableHead>
                   <TableHead className="text-[#333446]">Action</TableHead>
@@ -606,6 +633,23 @@ const MatchTools = () => {
                         className="w-20 text-sm"
                         step="0.01"
                       />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={due.actualPaid || ''}
+                        onChange={(e) => updateDueActualPaid(due.id, parseFloat(e.target.value) || 0)}
+                        className="w-20 text-sm"
+                        step="0.01"
+                        placeholder="0.00"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        (due.change || 0) > 0 ? 'bg-orange-100 text-orange-800' : 'text-[#7F8CAA]'
+                      }`}>
+                        {due.change ? `€${due.change.toFixed(2)}` : '€0.00'}
+                      </span>
                     </TableCell>
                     <TableCell className="text-[#7F8CAA]">{due.description}</TableCell>
                     <TableCell>
