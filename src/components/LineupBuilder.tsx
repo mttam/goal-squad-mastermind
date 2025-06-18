@@ -66,13 +66,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       isGK: true,
       team,
       originalPlayer: gkPlayer
-    });
-
-    // Outfield players - arrange them in a basic formation vertically
+    });    // Outfield players - arrange them in a basic formation vertically
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const sectionHeight = (fieldHeight - 100) / sectionsCount;
+    const availableHeight = fieldHeight - 120; // More compact vertical spacing
+    const sectionHeight = availableHeight / sectionsCount;
     
     outfieldPlayers.forEach((player, index) => {
       const sectionIndex = Math.floor(index / Math.ceil(outfieldPlayers.length / sectionsCount));
@@ -80,10 +79,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionY = isTeamB 
-        ? fieldHeight - 75 - sectionIndex * sectionHeight - sectionHeight / 2
-        : 75 + sectionIndex * sectionHeight + sectionHeight / 2;
+        ? fieldHeight - 60 - sectionIndex * sectionHeight - sectionHeight / 2
+        : 60 + sectionIndex * sectionHeight + sectionHeight / 2;
       
-      const playerX = fieldWidth / (playersInSection + 1) * (positionInSection + 1);
+      // Center players horizontally with better spacing
+      const availableWidth = fieldWidth - 80; // Leave margins
+      const playerX = 40 + (availableWidth / (playersInSection + 1)) * (positionInSection + 1);
       
       positions.push({
         id: parseInt(player.id),
@@ -108,19 +109,20 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       y: 25,
       isGK: true,
       team: 'A'
-    });
-
-    const formationPartsA = formationA.split('-').map(Number);
+    });    const formationPartsA = formationA.split('-').map(Number);
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const sectionHeightA = (fieldHeight / 2 - 65) / sectionsCountA;
+    const availableHeightA = (fieldHeight / 2) - 80; // More compact spacing
+    const sectionHeightA = availableHeightA / sectionsCountA;
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      const sectionY = 65 + sectionIndex * sectionHeightA + sectionHeightA / 2;
+      const sectionY = 50 + sectionIndex * sectionHeightA + sectionHeightA / 2;
       
       for (let i = 0; i < playersInSection; i++) {
-        const playerX = fieldWidth / (playersInSection + 1) * (i + 1);
+        // Center players horizontally with better spacing
+        const availableWidth = fieldWidth - 80; // Leave margins
+        const playerX = 40 + (availableWidth / (playersInSection + 1)) * (i + 1);
         positions.push({
           id: playerId,
           x: playerX,
@@ -139,15 +141,18 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       isGK: true,
       team: 'B'
     });
-    playerId++;
-
-    const formationPartsB = formationB.split('-').map(Number);
+    playerId++;    const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const sectionHeightB = (fieldHeight / 2 - 65) / sectionsCountB;    formationPartsB.forEach((playersInSection, sectionIndex) => {
-      const sectionY = fieldHeight - 65 - sectionIndex * sectionHeightB - sectionHeightB / 2;
+    const availableHeightB = (fieldHeight / 2) - 80; // More compact spacing
+    const sectionHeightB = availableHeightB / sectionsCountB;
+
+    formationPartsB.forEach((playersInSection, sectionIndex) => {
+      const sectionY = fieldHeight - 50 - sectionIndex * sectionHeightB - sectionHeightB / 2;
       
       for (let i = 0; i < playersInSection; i++) {
-        const playerX = fieldWidth / (playersInSection + 1) * (i + 1);
+        // Center players horizontally with better spacing
+        const availableWidth = fieldWidth - 80; // Leave margins
+        const playerX = 40 + (availableWidth / (playersInSection + 1)) * (i + 1);
         positions.push({
           id: playerId,
           x: playerX,
