@@ -441,6 +441,36 @@ const MatchTools = () => {
       description: "Due entry has been modified",
     });
   };
+  const handleUpdateDueField = (dueId: string, field: string, value: string | number) => {
+    const updatedDues = dues.map(due => {
+      if (due.id === dueId) {
+        const updatedDue = { ...due, [field]: value };
+        
+        // Recalculate change if actualPaid is updated
+        if (field === 'actualPaid') {
+          updatedDue.change = (value as number) - due.amount;
+        }
+        
+        return updatedDue;
+      }
+      return due;
+    });
+    
+    setDues(updatedDues);
+    
+    // Provide feedback for field updates
+    if (field === 'actualPaid') {
+      toast({
+        title: "Payment Updated 💰",
+        description: "Actual paid amount has been updated",
+      });
+    } else if (field === 'description') {
+      toast({
+        title: "Description Updated ✏️",
+        description: "Due description has been updated",
+      });
+    }
+  };
 
   const financialSummary = calculateFinancialSummary();
 
@@ -842,15 +872,14 @@ const MatchTools = () => {
                 }}
                 placeholder="0"
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Change (€) - Auto calculated</Label>
+            </div>            <div className="space-y-2">
+              <Label>Change (€)</Label>
               <Input
                 type="number"
                 value={newDue.change}
                 readOnly
                 className="bg-gray-100"
-                placeholder="Auto calculated: Actual Paid - Amount"
+                placeholder="Auto calculated"
               />
             </div>
             <div className="space-y-2">
@@ -920,14 +949,28 @@ const MatchTools = () => {
                       <th className="text-left p-2 text-[#333446]">Action</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {dues.map((due) => (
+                  <tbody>                    {dues.map((due) => (
                       <tr key={due.id} className="border-b border-[#EAEFEF]">
                         <td className="p-2 font-medium text-[#333446]">{due.playerName}</td>
                         <td className="p-2 text-[#333446]">€{due.amount}</td>
-                        <td className="p-2 text-[#333446]">€{due.actualPaid || 0}</td>
+                        <td className="p-2">
+                          <Input
+                            type="number"
+                            value={due.actualPaid || 0}
+                            onChange={(e) => handleUpdateDueField(due.id, 'actualPaid', Number(e.target.value))}
+                            className="w-20 h-8 text-sm"
+                            placeholder="0"
+                          />
+                        </td>
                         <td className="p-2 text-[#333446]">€{due.change || 0}</td>
-                        <td className="p-2 text-[#7F8CAA]">{due.description || '-'}</td>
+                        <td className="p-2">
+                          <Input
+                            value={due.description || ''}
+                            onChange={(e) => handleUpdateDueField(due.id, 'description', e.target.value)}
+                            className="w-32 h-8 text-sm"
+                            placeholder="Description"
+                          />
+                        </td>
                         <td className="p-2">
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
                             due.paid 
@@ -936,17 +979,25 @@ const MatchTools = () => {
                           }`}>
                             {due.paid ? '✅ Paid' : '❌ Unpaid'}
                           </span>
-                        </td>
-                        <td className="p-2">
-                          {!due.paid && (
+                        </td>                        <td className="p-2">
+                          <div className="flex gap-1">
+                            {!due.paid && (
+                              <Button
+                                size="sm"
+                                onClick={() => handlePayDue(due.id)}
+                                className="bg-green-600 text-white hover:bg-green-700 text-xs"
+                              >
+                                Mark Paid
+                              </Button>
+                            )}
                             <Button
                               size="sm"
-                              onClick={() => handlePayDue(due.id)}
-                              className="bg-green-600 text-white hover:bg-green-700"
+                              onClick={() => handleDeleteDue(due.id)}
+                              className="bg-red-600 text-white hover:bg-red-700 text-xs"
                             >
-                              Mark Paid
+                              Delete
                             </Button>
-                          )}
+                          </div>
                         </td>
                       </tr>
                     ))}
