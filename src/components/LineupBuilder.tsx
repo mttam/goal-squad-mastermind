@@ -32,7 +32,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
-
   // Update when formation prop changes
   useEffect(() => {
     if (formation) {
@@ -43,6 +42,27 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     }
   }, [formation]);
 
+  // Recalculate positions when field dimensions change
+  useEffect(() => {
+    const handleResize = () => {
+      if (players.length > 0) {
+        if (formation) {
+          // Regenerate from formation data
+          const teamAPlayers = generateTeamPositions(formation.teamA, 'A', formation.mode);
+          const teamBPlayers = generateTeamPositions(formation.teamB, 'B', formation.mode);
+          setPlayers([...teamAPlayers, ...teamBPlayers]);
+        } else if (selectedFormationA && selectedFormationB) {
+          // Regenerate from selected formations
+          const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+          setPlayers(newPositions);
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [players.length, formation, selectedFormationA, selectedFormationB, selectedMode]);
+
   const getPlayerCount = (mode: MatchMode): number => {
     switch (mode) {
       case '5vs5': return 5;
@@ -51,12 +71,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       case '8vs8': return 8;
       default: return 5;
     }
-  };
-  const generateTeamPositions = (teamPlayers: Player[], team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
+  };  const generateTeamPositions = (teamPlayers: Player[], team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
-    const fieldWidth = 300; // Width for vertical field
-    const fieldHeight = 400; // Height for vertical field
-    const isTeamB = team === 'B';      // Goalkeeper position (top for Team A, bottom for Team B)
+    // Get field dimensions from the actual div element, fallback to default values
+    const fieldWidth = fieldRef.current?.clientWidth || 300;
+    const fieldHeight = fieldRef.current?.clientHeight || 400;
+    const isTeamB = team === 'B';// Goalkeeper position (top for Team A, bottom for Team B)
     const gkPlayer = teamPlayers.find(p => p.position === 'GK') || teamPlayers[0];
     positions.push({
       id: parseInt(gkPlayer.id),
@@ -96,11 +116,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
 
     return positions;
-  };
-  const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
+  };  const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
-    const fieldWidth = 300; // Width for vertical field
-    const fieldHeight = 400; // Height for vertical field
+    // Get field dimensions from the actual div element, fallback to default values
+    const fieldWidth = fieldRef.current?.clientWidth || 300;
+    const fieldHeight = fieldRef.current?.clientHeight || 400;
       // Team A (top side - blue)
     positions.push({
       id: 1,
@@ -166,12 +186,14 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
     return positions;
   };
-
   const handleFormationSelect = () => {
     if (!selectedFormationA || !selectedFormationB) return;
     
-    const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
-    setPlayers(newPositions);
+    // Wait for the next tick to ensure field ref is available
+    setTimeout(() => {
+      const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+      setPlayers(newPositions);
+    }, 0);
   };
 
   const handleModeChange = (mode: MatchMode) => {
