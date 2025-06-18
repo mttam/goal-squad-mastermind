@@ -175,6 +175,17 @@ const MatchTools = () => {
     // Auto-sync rotation mode with formation mode
     setRotationMode(selectedMode);
 
+    // Debug: Log the generated formation
+    console.log('🔍 Generated Formation:', formation);
+    console.log('📋 Formation Details:', {
+      id: formation.id,
+      name: formation.name,
+      mode: formation.mode,
+      teamA: formation.teamA,
+      teamB: formation.teamB,
+      createdAt: formation.createdAt
+    });
+
     toast({
       title: "Formation Created! ⚽",
       description: `Match formation for ${selectedMode} mode is ready`,
@@ -676,10 +687,39 @@ const MatchTools = () => {
             </Card>
           </div>
         </div>
-      )}      
-      {/* Interactive Lineup Builder - Clean Integration */}
+      )}        {/* Interactive Lineup Builder - Clean Integration */}
       {generatedFormation ? (
-        <LineupBuilder formation={generatedFormation} />
+        <div className="space-y-4">
+          {/* Debug: Show generatedFormation data */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-blue-800 text-sm">🔍 Generated Formation Data (Debug)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-xs font-mono bg-white p-3 rounded border max-h-40 overflow-y-auto">
+                <div><strong>ID:</strong> {generatedFormation.id}</div>
+                <div><strong>Name:</strong> {generatedFormation.name}</div>
+                <div><strong>Mode:</strong> {generatedFormation.mode}</div>
+                <div><strong>Created:</strong> {generatedFormation.createdAt.toLocaleString()}</div>
+                <div className="mt-2"><strong>Team A ({generatedFormation.teamA.length} players):</strong></div>
+                <div className="ml-2">
+                  {generatedFormation.teamA.map((player, i) => (
+                    <div key={i}>• {player.name} ({player.position}) - ID: {player.id}</div>
+                  ))}
+                </div>
+                <div className="mt-2"><strong>Team B ({generatedFormation.teamB.length} players):</strong></div>
+                <div className="ml-2">
+                  {generatedFormation.teamB.map((player, i) => (
+                    <div key={i}>• {player.name} ({player.position}) - ID: {player.id}</div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* LineupBuilder Component */}
+          <LineupBuilder formation={generatedFormation} />
+        </div>
       ) : (
         <Card className="bg-white border-[#B8CFCE]">
           <CardHeader>
