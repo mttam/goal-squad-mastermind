@@ -52,45 +52,43 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       default: return 5;
     }
   };
-
   const generateTeamPositions = (teamPlayers: Player[], team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
-    const fieldWidth = 400; // Reduced from 500
-    const fieldHeight = 250; // Reduced from 350
-    const isTeamB = team === 'B';
-    
-    // Goalkeeper position
+    const fieldWidth = 300; // Width for vertical field
+    const fieldHeight = 400; // Height for vertical field
+    const isTeamB = team === 'B';    
+    // Goalkeeper position (top for Team A, bottom for Team B)
     const gkPlayer = teamPlayers.find(p => p.position === 'GK') || teamPlayers[0];
     positions.push({
       id: parseInt(gkPlayer.id),
-      x: isTeamB ? fieldWidth - 25 : 25, // Adjusted from 30
-      y: fieldHeight / 2,
+      x: fieldWidth / 2,
+      y: isTeamB ? fieldHeight - 25 : 25,
       isGK: true,
       team,
       originalPlayer: gkPlayer
     });
 
-    // Outfield players - arrange them in a basic formation
+    // Outfield players - arrange them in a basic formation vertically
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const sectionWidth = (fieldWidth - 100) / sectionsCount; // Adjusted from 120
+    const sectionHeight = (fieldHeight - 100) / sectionsCount;
     
     outfieldPlayers.forEach((player, index) => {
       const sectionIndex = Math.floor(index / Math.ceil(outfieldPlayers.length / sectionsCount));
       const positionInSection = index % Math.ceil(outfieldPlayers.length / sectionsCount);
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
-      const sectionX = isTeamB 
-        ? fieldWidth - 75 - sectionIndex * sectionWidth - sectionWidth / 2 // Adjusted from 90
-        : 75 + sectionIndex * sectionWidth + sectionWidth / 2; // Adjusted from 90
+      const sectionY = isTeamB 
+        ? fieldHeight - 75 - sectionIndex * sectionHeight - sectionHeight / 2
+        : 75 + sectionIndex * sectionHeight + sectionHeight / 2;
       
-      const playerY = fieldHeight / (playersInSection + 1) * (positionInSection + 1);
+      const playerX = fieldWidth / (playersInSection + 1) * (positionInSection + 1);
       
       positions.push({
         id: parseInt(player.id),
-        x: sectionX,
-        y: playerY,
+        x: playerX,
+        y: sectionY,
         team,
         originalPlayer: player
       });
@@ -98,17 +96,16 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
     return positions;
   };
-
   const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
-    const fieldWidth = 400; // Reduced from 500
-    const fieldHeight = 250; // Reduced from 350
+    const fieldWidth = 300; // Width for vertical field
+    const fieldHeight = 400; // Height for vertical field
     
-    // Team A (left side - blue)
+    // Team A (top side - blue)
     positions.push({
       id: 1,
-      x: 25, // Adjusted from 30
-      y: fieldHeight / 2,
+      x: fieldWidth / 2,
+      y: 25,
       isGK: true,
       team: 'A'
     });
@@ -117,28 +114,28 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const sectionWidthA = (fieldWidth / 2 - 65) / sectionsCountA; // Adjusted from 80
+    const sectionHeightA = (fieldHeight / 2 - 65) / sectionsCountA;
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      const sectionX = 65 + sectionIndex * sectionWidthA + sectionWidthA / 2; // Adjusted from 80
+      const sectionY = 65 + sectionIndex * sectionHeightA + sectionHeightA / 2;
       
       for (let i = 0; i < playersInSection; i++) {
-        const playerY = fieldHeight / (playersInSection + 1) * (i + 1);
+        const playerX = fieldWidth / (playersInSection + 1) * (i + 1);
         positions.push({
           id: playerId,
-          x: sectionX,
-          y: playerY,
+          x: playerX,
+          y: sectionY,
           team: 'A'
         });
         playerId++;
       }
     });
 
-    // Team B (right side - red)
+    // Team B (bottom side - red)
     positions.push({
       id: playerId,
-      x: fieldWidth - 25, // Adjusted from 30
-      y: fieldHeight / 2,
+      x: fieldWidth / 2,
+      y: fieldHeight - 25,
       isGK: true,
       team: 'B'
     });
@@ -146,17 +143,15 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
     const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const sectionWidthB = (fieldWidth / 2 - 65) / sectionsCountB; // Adjusted from 80
-
-    formationPartsB.forEach((playersInSection, sectionIndex) => {
-      const sectionX = fieldWidth - 65 - sectionIndex * sectionWidthB - sectionWidthB / 2; // Adjusted from 80
+    const sectionHeightB = (fieldHeight / 2 - 65) / sectionsCountB;    formationPartsB.forEach((playersInSection, sectionIndex) => {
+      const sectionY = fieldHeight - 65 - sectionIndex * sectionHeightB - sectionHeightB / 2;
       
       for (let i = 0; i < playersInSection; i++) {
-        const playerY = fieldHeight / (playersInSection + 1) * (i + 1);
+        const playerX = fieldWidth / (playersInSection + 1) * (i + 1);
         positions.push({
           id: playerId,
-          x: sectionX,
-          y: playerY,
+          x: playerX,
+          y: sectionY,
           team: 'B'
         });
         playerId++;
@@ -243,10 +238,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
             {/* Formation Selection for Both Teams */}
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
+              <div className="space-y-2">                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
                   <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
-                  Team A Formation (Blue - Left Side)
+                  Team A Formation (Blue - Top Side)
                 </label>
                 <Select value={selectedFormationA} onValueChange={setSelectedFormationA}>
                   <SelectTrigger>
@@ -262,10 +256,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
+              <div className="space-y-2">                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-                  Team B Formation (Red - Right Side)
+                  Team B Formation (Red - Bottom Side)
                 </label>
                 <Select value={selectedFormationB} onValueChange={setSelectedFormationB}>
                   <SelectTrigger>
@@ -298,30 +291,28 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#333446]">
               {formation ? `${formation.name} - Formation View` : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
-            </label>
-            <div
+            </label>            <div
               ref={fieldRef}
-              className="relative w-full h-64 bg-gradient-to-b from-green-400 to-green-500 border-4 border-white rounded-lg overflow-hidden cursor-crosshair"
+              className="relative w-full h-96 bg-gradient-to-b from-green-400 to-green-500 border-4 border-[#333446] rounded-lg overflow-hidden cursor-crosshair"
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
               style={{ userSelect: 'none' }}
-            >
-              {/* Soccer field markings */}
+            >              {/* Soccer field markings */}
               <div className="absolute inset-0">
-                {/* Center line */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-white opacity-90 transform -translate-x-0.5"></div>
+                {/* Center line (horizontal) */}
+                <div className="absolute left-0 right-0 top-1/2 h-1 bg-white opacity-90 transform -translate-y-0.5"></div>
                 {/* Center circle */}
                 <div className="absolute left-1/2 top-1/2 w-16 h-16 border-2 border-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
                 <div className="absolute left-1/2 top-1/2 w-2 h-2 bg-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
                 
-                {/* Left goal area */}
-                <div className="absolute left-0 top-1/2 w-12 h-16 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
-                <div className="absolute left-0 top-1/2 w-6 h-8 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
+                {/* Top goal area */}
+                <div className="absolute top-0 left-1/2 h-12 w-16 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
+                <div className="absolute top-0 left-1/2 h-6 w-8 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
                 
-                {/* Right goal area */}
-                <div className="absolute right-0 top-1/2 w-12 h-16 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
-                <div className="absolute right-0 top-1/2 w-6 h-8 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
+                {/* Bottom goal area */}
+                <div className="absolute bottom-0 left-1/2 h-12 w-16 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-1/2 h-6 w-8 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
                 
                 {/* Corner arcs */}
                 <div className="absolute top-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-br-full"></div>
@@ -350,15 +341,14 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
                 </div>
               ))}
             </div>
-            
-            <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
+              <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-blue-600 rounded-full border-2 border-white"></div>
-                <span>Team A (Left)</span>
+                <span>Team A (Top)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-red-600 rounded-full border-2 border-white"></div>
-                <span>Team B (Right)</span>
+                <span>Team B (Bottom)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-blue-800 rounded-full border-2 border-white"></div>
