@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { Player, Squad, Formation, Due, MatchMode } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
+import LineupBuilder from '@/components/LineupBuilder';
 
 const MatchTools = () => {
   const { players, squads, formations, dues, addFormation, addDue, updateDue } = useFantacalcietto();
@@ -265,6 +266,9 @@ const MatchTools = () => {
         <h1 className="text-3xl font-bold text-[#333446]">Match Tools ⚽</h1>
         <p className="text-[#7F8CAA]">Manage formations, goalkeeper rotations, and player dues</p>
       </div>
+
+      {/* Interactive Lineup Builder */}
+      <LineupBuilder />
 
       {/* Formation Generator */}
       <Card className="bg-white border-[#B8CFCE]">
