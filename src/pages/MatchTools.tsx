@@ -254,26 +254,42 @@ const MatchTools = () => {
       '8vs8': 8,
     }[rotationMode] || 5;
 
-    // Generate Team A rotation schedule
+    // Helper function to shuffle an array randomly
+    const shuffleArray = (array: Player[]): Player[] => {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    };
+
+    // Generate Team A rotation schedule with random selection
     const teamASchedule: {segment: number, goalkeeper: Player}[] = [];
     if (teamARotationPlayers.length > 0) {
+      // Create a shuffled array of players for random rotation
+      const shuffledTeamA = shuffleArray(teamARotationPlayers);
+      
       for (let segment = 1; segment <= segmentsPerTeam; segment++) {
-        const playerIndex = (segment - 1) % teamARotationPlayers.length;
+        const playerIndex = (segment - 1) % shuffledTeamA.length;
         teamASchedule.push({ 
           segment: segment, 
-          goalkeeper: teamARotationPlayers[playerIndex] 
+          goalkeeper: shuffledTeamA[playerIndex] 
         });
       }
     }
 
-    // Generate Team B rotation schedule  
+    // Generate Team B rotation schedule with random selection
     const teamBSchedule: {segment: number, goalkeeper: Player}[] = [];
     if (teamBRotationPlayers.length > 0) {
+      // Create a shuffled array of players for random rotation
+      const shuffledTeamB = shuffleArray(teamBRotationPlayers);
+      
       for (let segment = 1; segment <= segmentsPerTeam; segment++) {
-        const playerIndex = (segment - 1) % teamBRotationPlayers.length;
+        const playerIndex = (segment - 1) % shuffledTeamB.length;
         teamBSchedule.push({ 
           segment: segment, 
-          goalkeeper: teamBRotationPlayers[playerIndex] 
+          goalkeeper: shuffledTeamB[playerIndex] 
         });
       }
     }
@@ -283,10 +299,10 @@ const MatchTools = () => {
     const rotationSource = generatedFormation 
       ? `formation "${generatedFormation.name}"`
       : "available players";    toast({
-      title: "Rotation Generated! 🔄",
+      title: "Random Rotation Generated! 🔄",
       description: hasFixedGoalkeepers 
-        ? `Separate goalkeeper rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode using ${rotationSource}`
-        : `Separate player rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper`,
+        ? `Random goalkeeper rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode using ${rotationSource}`
+        : `Random player rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper randomly`,
     });
   };
 
