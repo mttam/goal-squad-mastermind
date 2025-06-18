@@ -322,12 +322,19 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
   };
 
   return (
-    <Card className={`bg-white border-[#B8CFCE] ${className}`}>
-      <CardHeader>
-        <CardTitle className="text-[#333446]">Interactive Lineup Builder ⚽</CardTitle>
+    <Card className={`bg-white border-[#B8CFCE] ${className}`}>      <CardHeader>
+        <CardTitle className="text-[#333446]">
+          Interactive Lineup Builder ⚽
+          {formationData && (
+            <span className="text-sm font-normal text-[#7F8CAA] ml-2">
+              (Loaded: {formationData.teamA} vs {formationData.teamB} - {formationData.mode})
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!formation && !formationData && (
+        {/* Always show controls when formationData is provided to allow modifications */}
+        {((!formation && !formationData) || formationData) && (
           <>
             {/* Mode Selection */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -385,14 +392,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            {selectedFormationA && selectedFormationB && (
+            </div>            {selectedFormationA && selectedFormationB && (
               <Button 
                 onClick={handleFormationSelect}
                 className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full"
               >
-                Apply Formations to Field
+                {formationData ? 'Update Formations on Field' : 'Apply Formations to Field'}
               </Button>
             )}
           </>
