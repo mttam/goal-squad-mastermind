@@ -31,8 +31,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
   const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-  const fieldRef = useRef<HTMLDivElement>(null);
-  // Update when formation prop changes
+  const fieldRef = useRef<HTMLDivElement>(null);  // Update when formation prop changes
   useEffect(() => {
     if (formation) {
       setSelectedMode(formation.mode);
@@ -42,9 +41,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     }
   }, [formation]);
 
-  // Recalculate positions when field dimensions change
+  // Recalculate positions when field becomes available or dimensions change
   useEffect(() => {
-    const handleResize = () => {
+    if (!fieldRef.current) return;
+
+    const recalculatePositions = () => {
       if (players.length > 0) {
         if (formation) {
           // Regenerate from formation data
@@ -59,9 +60,24 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       }
     };
 
+    // Initial calculation when field becomes available
+    recalculatePositions();
+
+    const handleResize = () => {
+      recalculatePositions();
+    };
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [players.length, formation, selectedFormationA, selectedFormationB, selectedMode]);
+
+  // Additional effect to handle initial positioning when formations are first applied
+  useEffect(() => {
+    if (selectedFormationA && selectedFormationB && fieldRef.current && players.length === 0) {
+      const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+      setPlayers(newPositions);
+    }
+  }, [selectedFormationA, selectedFormationB, selectedMode]);
 
   const getPlayerCount = (mode: MatchMode): number => {
     switch (mode) {
@@ -185,15 +201,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
 
     return positions;
-  };
-  const handleFormationSelect = () => {
+  };  const handleFormationSelect = () => {
     if (!selectedFormationA || !selectedFormationB) return;
     
-    // Wait for the next tick to ensure field ref is available
-    setTimeout(() => {
-      const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
-      setPlayers(newPositions);
-    }, 0);
+    const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+    setPlayers(newPositions);
   };
 
   const handleModeChange = (mode: MatchMode) => {
