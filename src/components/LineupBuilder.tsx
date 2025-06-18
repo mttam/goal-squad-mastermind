@@ -55,15 +55,15 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
   const generateTeamPositions = (teamPlayers: Player[], team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
-    const fieldWidth = 500;
-    const fieldHeight = 350;
+    const fieldWidth = 400; // Reduced from 500
+    const fieldHeight = 250; // Reduced from 350
     const isTeamB = team === 'B';
     
     // Goalkeeper position
     const gkPlayer = teamPlayers.find(p => p.position === 'GK') || teamPlayers[0];
     positions.push({
       id: parseInt(gkPlayer.id),
-      x: isTeamB ? fieldWidth - 30 : 30,
+      x: isTeamB ? fieldWidth - 25 : 25, // Adjusted from 30
       y: fieldHeight / 2,
       isGK: true,
       team,
@@ -74,7 +74,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const sectionWidth = (fieldWidth - 120) / sectionsCount;
+    const sectionWidth = (fieldWidth - 100) / sectionsCount; // Adjusted from 120
     
     outfieldPlayers.forEach((player, index) => {
       const sectionIndex = Math.floor(index / Math.ceil(outfieldPlayers.length / sectionsCount));
@@ -82,8 +82,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionX = isTeamB 
-        ? fieldWidth - 90 - sectionIndex * sectionWidth - sectionWidth / 2
-        : 90 + sectionIndex * sectionWidth + sectionWidth / 2;
+        ? fieldWidth - 75 - sectionIndex * sectionWidth - sectionWidth / 2 // Adjusted from 90
+        : 75 + sectionIndex * sectionWidth + sectionWidth / 2; // Adjusted from 90
       
       const playerY = fieldHeight / (playersInSection + 1) * (positionInSection + 1);
       
@@ -101,13 +101,13 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
   const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
-    const fieldWidth = 500;
-    const fieldHeight = 350;
+    const fieldWidth = 400; // Reduced from 500
+    const fieldHeight = 250; // Reduced from 350
     
     // Team A (left side - blue)
     positions.push({
       id: 1,
-      x: 30,
+      x: 25, // Adjusted from 30
       y: fieldHeight / 2,
       isGK: true,
       team: 'A'
@@ -117,10 +117,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const sectionWidthA = (fieldWidth / 2 - 80) / sectionsCountA;
+    const sectionWidthA = (fieldWidth / 2 - 65) / sectionsCountA; // Adjusted from 80
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      const sectionX = 80 + sectionIndex * sectionWidthA + sectionWidthA / 2;
+      const sectionX = 65 + sectionIndex * sectionWidthA + sectionWidthA / 2; // Adjusted from 80
       
       for (let i = 0; i < playersInSection; i++) {
         const playerY = fieldHeight / (playersInSection + 1) * (i + 1);
@@ -137,7 +137,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     // Team B (right side - red)
     positions.push({
       id: playerId,
-      x: fieldWidth - 30,
+      x: fieldWidth - 25, // Adjusted from 30
       y: fieldHeight / 2,
       isGK: true,
       team: 'B'
@@ -146,10 +146,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
     const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const sectionWidthB = (fieldWidth / 2 - 80) / sectionsCountB;
+    const sectionWidthB = (fieldWidth / 2 - 65) / sectionsCountB; // Adjusted from 80
 
     formationPartsB.forEach((playersInSection, sectionIndex) => {
-      const sectionX = fieldWidth - 80 - sectionIndex * sectionWidthB - sectionWidthB / 2;
+      const sectionX = fieldWidth - 65 - sectionIndex * sectionWidthB - sectionWidthB / 2; // Adjusted from 80
       
       for (let i = 0; i < playersInSection; i++) {
         const playerY = fieldHeight / (playersInSection + 1) * (i + 1);
@@ -191,8 +191,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const boundedX = Math.max(20, Math.min(x, rect.width - 20));
-    const boundedY = Math.max(20, Math.min(y, rect.height - 20));
+    const boundedX = Math.max(15, Math.min(x, rect.width - 15)); // Adjusted from 20
+    const boundedY = Math.max(15, Math.min(y, rect.height - 15)); // Adjusted from 20
 
     setPlayers(prev => 
       prev.map(player => 
@@ -301,7 +301,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
             </label>
             <div
               ref={fieldRef}
-              className="relative w-full h-96 bg-gradient-to-b from-green-400 to-green-500 border-4 border-white rounded-lg overflow-hidden cursor-crosshair"
+              className="relative w-full h-64 bg-gradient-to-b from-green-400 to-green-500 border-4 border-white rounded-lg overflow-hidden cursor-crosshair"
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
@@ -312,29 +312,29 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
                 {/* Center line */}
                 <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-white opacity-90 transform -translate-x-0.5"></div>
                 {/* Center circle */}
-                <div className="absolute left-1/2 top-1/2 w-20 h-20 border-2 border-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute left-1/2 top-1/2 w-16 h-16 border-2 border-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
                 <div className="absolute left-1/2 top-1/2 w-2 h-2 bg-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
                 
                 {/* Left goal area */}
-                <div className="absolute left-0 top-1/2 w-16 h-24 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
-                <div className="absolute left-0 top-1/2 w-8 h-12 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
+                <div className="absolute left-0 top-1/2 w-12 h-16 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
+                <div className="absolute left-0 top-1/2 w-6 h-8 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
                 
                 {/* Right goal area */}
-                <div className="absolute right-0 top-1/2 w-16 h-24 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
-                <div className="absolute right-0 top-1/2 w-8 h-12 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
+                <div className="absolute right-0 top-1/2 w-12 h-16 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
+                <div className="absolute right-0 top-1/2 w-6 h-8 border-2 border-white opacity-90 transform -translate-y-1/2"></div>
                 
                 {/* Corner arcs */}
-                <div className="absolute top-0 left-0 w-8 h-8 border-2 border-white opacity-90 rounded-br-full"></div>
-                <div className="absolute top-0 right-0 w-8 h-8 border-2 border-white opacity-90 rounded-bl-full"></div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-2 border-white opacity-90 rounded-tr-full"></div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-2 border-white opacity-90 rounded-tl-full"></div>
+                <div className="absolute top-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-br-full"></div>
+                <div className="absolute top-0 right-0 w-6 h-6 border-2 border-white opacity-90 rounded-bl-full"></div>
+                <div className="absolute bottom-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-tr-full"></div>
+                <div className="absolute bottom-0 right-0 w-6 h-6 border-2 border-white opacity-90 rounded-tl-full"></div>
               </div>
 
               {/* Players */}
               {players.map((player) => (
                 <div
                   key={player.id}
-                  className={`absolute w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
+                  className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
                     player.isGK 
                       ? (player.team === 'A' ? 'bg-blue-800' : 'bg-red-800')
                       : (player.team === 'A' ? 'bg-blue-600' : 'bg-red-600')
