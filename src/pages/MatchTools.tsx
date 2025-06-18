@@ -626,7 +626,7 @@ const MatchTools = () => {
               <p className="text-xs text-[#7F8CAA] mt-1">Mode: {rotationMode}</p>
             </div>
           )}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="bg-white border-[#B8CFCE]">
               <CardHeader className="pb-2">
                 <CardTitle className="text-[#333446] text-lg">
@@ -635,16 +635,15 @@ const MatchTools = () => {
                     <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationA})</span>
                   )}
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
+              </CardHeader>              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {rotationSchedule.teamA.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded bg-[#EAEFEF] text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#333446] w-8">#{item.segment}</span>
-                        <span>🥅</span>
-                        <span className="font-medium text-[#333446]">{item.goalkeeper.name}</span>
-                        <span className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</span>
+                    <div key={index} className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF] text-sm">
+                      <span className="font-bold text-[#333446] w-6 text-center">#{item.segment}</span>
+                      <span>🥅</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-[#333446] truncate">{item.goalkeeper.name}</div>
+                        <div className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</div>
                       </div>
                     </div>
                   ))}
@@ -660,16 +659,15 @@ const MatchTools = () => {
                     <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationB})</span>
                   )}
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1 max-h-48 overflow-y-auto">
+              </CardHeader>              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {rotationSchedule.teamB.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 rounded bg-[#EAEFEF] text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#333446] w-8">#{item.segment}</span>
-                        <span>🥅</span>
-                        <span className="font-medium text-[#333446]">{item.goalkeeper.name}</span>
-                        <span className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</span>
+                    <div key={index} className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF] text-sm">
+                      <span className="font-bold text-[#333446] w-6 text-center">#{item.segment}</span>
+                      <span>🥅</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-[#333446] truncate">{item.goalkeeper.name}</div>
+                        <div className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</div>
                       </div>
                     </div>
                   ))}
