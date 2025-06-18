@@ -687,39 +687,10 @@ const MatchTools = () => {
             </Card>
           </div>
         </div>
-      )}        {/* Interactive Lineup Builder - Clean Integration */}
+      )}      
+      {/* Interactive Lineup Builder - Clean Integration */}
       {generatedFormation ? (
-        <div className="space-y-4">
-          {/* Debug: Show generatedFormation data */}
-          <Card className="bg-blue-50 border-blue-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-blue-800 text-sm">🔍 Generated Formation Data (Debug)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xs font-mono bg-white p-3 rounded border max-h-40 overflow-y-auto">
-                <div><strong>ID:</strong> {generatedFormation.id}</div>
-                <div><strong>Name:</strong> {generatedFormation.name}</div>
-                <div><strong>Mode:</strong> {generatedFormation.mode}</div>
-                <div><strong>Created:</strong> {generatedFormation.createdAt.toLocaleString()}</div>
-                <div className="mt-2"><strong>Team A ({generatedFormation.teamA.length} players):</strong></div>
-                <div className="ml-2">
-                  {generatedFormation.teamA.map((player, i) => (
-                    <div key={i}>• {player.name} ({player.position}) - ID: {player.id}</div>
-                  ))}
-                </div>
-                <div className="mt-2"><strong>Team B ({generatedFormation.teamB.length} players):</strong></div>
-                <div className="ml-2">
-                  {generatedFormation.teamB.map((player, i) => (
-                    <div key={i}>• {player.name} ({player.position}) - ID: {player.id}</div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* LineupBuilder Component */}
-          <LineupBuilder formation={generatedFormation} />
-        </div>
+        <LineupBuilder formation={generatedFormation} />
       ) : (
         <Card className="bg-white border-[#B8CFCE]">
           <CardHeader>
@@ -733,11 +704,11 @@ const MatchTools = () => {
                 Use the Formation Generator above to create a formation and see the interactive lineup
               </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
       
-      {/* Dues Management */}
+      {/* Dues Management section with all the existing logic and UI */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
           <CardTitle className="text-[#333446]">Dues Management 💰</CardTitle>
