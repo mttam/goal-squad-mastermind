@@ -267,9 +267,7 @@ const MatchTools = () => {
         <p className="text-[#7F8CAA]">Manage formations, goalkeeper rotations, and player dues</p>
       </div>
 
-      {/* Interactive Lineup Builder - now integrated with Formation Generator */}
-      <LineupBuilder formation={generatedFormation} />
-
+      
       {/* Formation Generator */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
@@ -477,7 +475,10 @@ const MatchTools = () => {
           </Card>
         </div>
       )}
-
+      
+      {/* Interactive Lineup Builder - now integrated with Formation Generator */}
+      <LineupBuilder formation={generatedFormation} />
+      
       {/* Dues Management section with all the existing logic and UI */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
