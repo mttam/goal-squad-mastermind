@@ -137,15 +137,18 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     // Get field dimensions from the actual div element, fallback to default values
     const fieldWidth = fieldRef.current?.clientWidth || 300;
     const fieldHeight = fieldRef.current?.clientHeight || 400;
-      // Team A (top side - blue)
+    
+    // Team A (top side - blue) - use unique IDs but display team-based numbers
     positions.push({
-      id: 1,
+      id: 1001, // Unique ID for Team A GK
       x: fieldWidth * 0.5, // Center horizontally (50% of field width)
       y: fieldHeight * 0.1, // 10% from top
       isGK: true,
       team: 'A'
-    });    const formationPartsA = formationA.split('-').map(Number);
-    let playerId = 2;
+    });
+
+    const formationPartsA = formationA.split('-').map(Number);
+    let uniqueIdA = 1002; // Start unique IDs for Team A outfield players
     
     const sectionsCountA = formationPartsA.length;
     const availableHeightA = fieldHeight * 0.25; // 25% of field height for formation (reduced from 30%)
@@ -161,22 +164,26 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         const availableWidth = fieldWidth * (1 - 2 * marginRatio);
         const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (i + 1);
         positions.push({
-          id: playerId,
+          id: uniqueIdA,
           x: playerX,
           y: sectionY,
           team: 'A'
         });
-        playerId++;
+        uniqueIdA++;
       }
-    });// Team B (bottom side - red)
+    });
+
+    // Team B (bottom side - red) - use unique IDs but display team-based numbers
     positions.push({
-      id: playerId,
+      id: 2001, // Unique ID for Team B GK
       x: fieldWidth * 0.5, // Center horizontally (50% of field width)
       y: fieldHeight * 0.9, // 10% from bottom
       isGK: true,
       team: 'B'
     });
-    playerId++;    const formationPartsB = formationB.split('-').map(Number);
+
+    const formationPartsB = formationB.split('-').map(Number);
+    let uniqueIdB = 2002; // Start unique IDs for Team B outfield players
     const sectionsCountB = formationPartsB.length;
     const availableHeightB = fieldHeight * 0.25; // 25% of field height for formation (reduced from 30%)
     const sectionHeightB = availableHeightB / sectionsCountB;
@@ -190,19 +197,19 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         const marginRatio = 0.15; // 15% margins on each side
         const availableWidth = fieldWidth * (1 - 2 * marginRatio);
         const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (i + 1);
-        let playerB = (playerId-playerId)+1;
+        
         positions.push({
-          id: playerB,
+          id: uniqueIdB,
           x: playerX,
           y: sectionY,
           team: 'B'
         });
-        playerId++;
+        uniqueIdB++;
       }
     });
 
     return positions;
-  };  const handleFormationSelect = () => {
+  };const handleFormationSelect = () => {
     if (!selectedFormationA || !selectedFormationB) return;
     
     const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
@@ -282,6 +289,20 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     { value: '7vs7', label: '7 vs 7' },
     { value: '8vs8', label: '8 vs 8' },
   ];
+
+  // Get display number for a player (1-based numbering for each team)
+  const getPlayerDisplayNumber = (player: FieldPlayer): number => {
+    const teamPlayers = players.filter(p => p.team === player.team);
+    const sortedTeamPlayers = teamPlayers.sort((a, b) => {
+      // GK first, then by original ID order
+      if (a.isGK && !b.isGK) return -1;
+      if (!a.isGK && b.isGK) return 1;
+      return a.id - b.id;
+    });
+    
+    const index = sortedTeamPlayers.findIndex(p => p.id === player.id);
+    return index + 1; // 1-based numbering
+  };
 
   return (
     <Card className={`bg-white border-[#B8CFCE] ${className}`}>
@@ -409,12 +430,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
                     left: player.x, 
                     top: player.y,
                     touchAction: 'none'
-                  }}
-                  onMouseDown={() => handleMouseDown(player.id)}
+                  }}                  onMouseDown={() => handleMouseDown(player.id)}
                   onTouchStart={() => handleTouchStart(player.id)}
-                  title={player.originalPlayer?.name || `Player ${player.id}`}
+                  title={player.originalPlayer?.name || `Team ${player.team} - Player ${getPlayerDisplayNumber(player)}`}
                 >
-                  {player.originalPlayer?.name.split(' ')[0].substring(0, 2).toUpperCase() || player.id}
+                  {player.originalPlayer?.name.split(' ')[0].substring(0, 2).toUpperCase() || getPlayerDisplayNumber(player)}
                 </div>
               ))}
             </div>
