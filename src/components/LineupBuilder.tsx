@@ -27,7 +27,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
   };
 
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
-  const [selectedFormation, setSelectedFormation] = useState<string>('');
+  const [selectedFormationA, setSelectedFormationA] = useState<string>('');
+  const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -98,13 +99,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     return positions;
   };
 
-  const generateFormationPositions = (formation: string, mode: MatchMode): FieldPlayer[] => {
-    const playerCount = getPlayerCount(mode);
+  const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
     const fieldWidth = 500;
     const fieldHeight = 350;
     
-    // Team A (left side)
+    // Team A (left side - blue)
     positions.push({
       id: 1,
       x: 30,
@@ -113,14 +113,14 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       team: 'A'
     });
 
-    const formationParts = formation.split('-').map(Number);
+    const formationPartsA = formationA.split('-').map(Number);
     let playerId = 2;
     
-    const sectionsCount = formationParts.length;
-    const sectionWidth = (fieldWidth / 2 - 80) / sectionsCount;
+    const sectionsCountA = formationPartsA.length;
+    const sectionWidthA = (fieldWidth / 2 - 80) / sectionsCountA;
     
-    formationParts.forEach((playersInSection, sectionIndex) => {
-      const sectionX = 80 + sectionIndex * sectionWidth + sectionWidth / 2;
+    formationPartsA.forEach((playersInSection, sectionIndex) => {
+      const sectionX = 80 + sectionIndex * sectionWidthA + sectionWidthA / 2;
       
       for (let i = 0; i < playersInSection; i++) {
         const playerY = fieldHeight / (playersInSection + 1) * (i + 1);
@@ -134,7 +134,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       }
     });
 
-    // Team B (right side) - mirror formation
+    // Team B (right side - red)
     positions.push({
       id: playerId,
       x: fieldWidth - 30,
@@ -144,8 +144,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
     playerId++;
 
-    formationParts.forEach((playersInSection, sectionIndex) => {
-      const sectionX = fieldWidth - 80 - sectionIndex * sectionWidth - sectionWidth / 2;
+    const formationPartsB = formationB.split('-').map(Number);
+    const sectionsCountB = formationPartsB.length;
+    const sectionWidthB = (fieldWidth / 2 - 80) / sectionsCountB;
+
+    formationPartsB.forEach((playersInSection, sectionIndex) => {
+      const sectionX = fieldWidth - 80 - sectionIndex * sectionWidthB - sectionWidthB / 2;
       
       for (let i = 0; i < playersInSection; i++) {
         const playerY = fieldHeight / (playersInSection + 1) * (i + 1);
@@ -162,15 +166,17 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     return positions;
   };
 
-  const handleFormationSelect = (formation: string) => {
-    setSelectedFormation(formation);
-    const newPositions = generateFormationPositions(formation, selectedMode);
+  const handleFormationSelect = () => {
+    if (!selectedFormationA || !selectedFormationB) return;
+    
+    const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
     setPlayers(newPositions);
   };
 
   const handleModeChange = (mode: MatchMode) => {
     setSelectedMode(mode);
-    setSelectedFormation('');
+    setSelectedFormationA('');
+    setSelectedFormationB('');
     setPlayers([]);
   };
 
@@ -235,22 +241,55 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
               ))}
             </div>
 
-            {/* Formation Selection */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-[#333446]">Select Formation</label>
-              <Select value={selectedFormation} onValueChange={handleFormationSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose a formation" />
-                </SelectTrigger>
-                <SelectContent>
-                  {formations[selectedMode].map((formation) => (
-                    <SelectItem key={formation} value={formation}>
-                      {formation}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Formation Selection for Both Teams */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
+                  <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
+                  Team A Formation (Blue - Left Side)
+                </label>
+                <Select value={selectedFormationA} onValueChange={setSelectedFormationA}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose Team A formation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formations[selectedMode].map((formation) => (
+                      <SelectItem key={formation} value={formation}>
+                        {formation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                  Team B Formation (Red - Right Side)
+                </label>
+                <Select value={selectedFormationB} onValueChange={setSelectedFormationB}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose Team B formation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formations[selectedMode].map((formation) => (
+                      <SelectItem key={formation} value={formation}>
+                        {formation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            {selectedFormationA && selectedFormationB && (
+              <Button 
+                onClick={handleFormationSelect}
+                className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full"
+              >
+                Apply Formations to Field
+              </Button>
+            )}
           </>
         )}
 
@@ -258,7 +297,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         {players.length > 0 && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-[#333446]">
-              {formation ? `${formation.name} - Formation View` : 'Field View'} - Drag players to reposition
+              {formation ? `${formation.name} - Formation View` : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
             </label>
             <div
               ref={fieldRef}
@@ -315,14 +354,15 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
             <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-blue-600 rounded-full border-2 border-white"></div>
-                <span>Team A</span>
+                <span>Team A (Left)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-red-600 rounded-full border-2 border-white"></div>
-                <span>Team B</span>
+                <span>Team B (Right)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-blue-800 rounded-full border-2 border-white"></div>
+                <div className="w-5 h-5 bg-red-800 rounded-full border-2 border-white"></div>
                 <span>Goalkeepers</span>
               </div>
             </div>
