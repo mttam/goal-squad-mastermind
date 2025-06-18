@@ -105,7 +105,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const availableHeight = fieldHeight * 0.3; // 30% of field height for formation (reduced to prevent overlap)
+    const availableHeight = fieldHeight * 0.25; // 25% of field height for formation (reduced from 30%)
     const sectionHeight = availableHeight / sectionsCount;
     
     outfieldPlayers.forEach((player, index) => {
@@ -114,8 +114,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionY = isTeamB 
-        ? fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeight // Start from 75% for Team B (reduced from 80%)
-        : fieldHeight * 0.15 + (sectionIndex + 1) * sectionHeight; // Start from 15% for Team A (reduced from 20%)
+        ? fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeight // Start from 75% for Team B
+        : fieldHeight * 0.12 + (sectionIndex + 1) * sectionHeight; // Start from 12% for Team A (closer to GK)
       
       // Center players horizontally with relative spacing
       const marginRatio = 0.15; // 15% margins on each side
@@ -148,12 +148,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const availableHeightA = fieldHeight * 0.3; // 30% of field height for formation (reduced to prevent overlap)
+    const availableHeightA = fieldHeight * 0.25; // 25% of field height for formation (reduced from 30%)
     const sectionHeightA = availableHeightA / sectionsCountA;
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      // Start from 15% of field height and move towards center
-      const sectionY = fieldHeight * 0.15 + (sectionIndex + 1) * sectionHeightA;
+      // Start from 12% of field height and move towards center (closer to GK)
+      const sectionY = fieldHeight * 0.12 + (sectionIndex + 1) * sectionHeightA;
       
       for (let i = 0; i < playersInSection; i++) {
         // Center players horizontally with relative spacing
@@ -178,12 +178,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
     playerId++;    const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const availableHeightB = fieldHeight * 0.3; // 30% of field height for formation (reduced to prevent overlap)
+    const availableHeightB = fieldHeight * 0.25; // 25% of field height for formation (reduced from 30%)
     const sectionHeightB = availableHeightB / sectionsCountB;
 
     formationPartsB.forEach((playersInSection, sectionIndex) => {
-      // Start from 75% of field height and move towards center
-      const sectionY = fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeightB;
+      // Start from 88% of field height and move towards center (closer to GK)
+      const sectionY = fieldHeight * 0.88 - (sectionIndex + 1) * sectionHeightB;
       
       for (let i = 0; i < playersInSection; i++) {
         // Center players horizontally with relative spacing
