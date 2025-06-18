@@ -14,9 +14,10 @@ const MatchTools = () => {
   const { players, squads, formations, dues, addFormation, addDue, updateDue } = useFantacalcietto();
   const { toast } = useToast();
 
-  const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
-  const [selectedSquadA, setSelectedSquadA] = useState('');
+  const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');  const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
+  const [selectedFormationA, setSelectedFormationA] = useState('');
+  const [selectedFormationB, setSelectedFormationB] = useState('');
   const [generatedFormation, setGeneratedFormation] = useState<Formation | null>(null);
   const [rotationMode, setRotationMode] = useState<MatchMode>('5vs5');
   const [selectedGoalkeepers, setSelectedGoalkeepers] = useState<string[]>([]);
@@ -26,8 +27,15 @@ const MatchTools = () => {
     amount: 0,
     description: '',
     actualPaid: 0,
-    change: 0
-  });
+    change: 0  });
+
+  // Formation options for each match mode
+  const formationOptions = {
+    '5vs5': ['3-1', '2-2', '1-3', '2-1-1', '1-2-1', '1-1-2'],
+    '6vs6': ['4-1', '3-2', '2-3', '1-4', '3-1-1', '2-2-1', '2-1-2', '1-3-1', '1-2-2', '1-1-3'],
+    '7vs7': ['4-2', '3-3', '2-4', '5-1', '4-1-1', '3-2-1', '3-1-2', '2-3-1', '2-2-2', '2-1-3', '1-4-1', '1-3-2', '1-2-3'],
+    '8vs8': ['4-3', '3-4', '5-2', '2-5', '6-1', '1-6', '5-1-1', '4-2-1', '4-1-2', '3-3-1', '3-2-2', '3-1-3', '2-4-1', '2-3-2', '2-2-3', '1-5-1', '1-4-2', '1-3-3', '1-2-4']
+  };
 
   // Local storage keys
   const STORAGE_KEYS = {
@@ -91,13 +99,18 @@ const MatchTools = () => {
     }
   }, [selectedGoalkeepers]);
 
+  // Reset formation selections when mode changes
+  useEffect(() => {
+    setSelectedFormationA('');
+    setSelectedFormationB('');
+  }, [selectedMode]);
+
   const modes = [
     { value: '5vs5', label: '5 vs 5', icon: '⚽' },
     { value: '6vs6', label: '6 vs 6', icon: '⚽' },
     { value: '7vs7', label: '7 vs 7', icon: '⚽' },
     { value: '8vs8', label: '8 vs 8', icon: '⚽' },
   ];
-
   const getPositionEmoji = (position: string) => {
     switch (position) {
       case 'GK': return '🥅';
@@ -108,11 +121,30 @@ const MatchTools = () => {
     }
   };
 
+  const getFormationLabel = (formation: string) => {
+    // Convert formation like "3-1" to "3-1 (3 Defenders, 1 Midfielder)"
+    const parts = formation.split('-').map(Number);
+    const labels = ['Defenders', 'Midfielders', 'Attackers'];
+    const description = parts.map((count, index) => 
+      count > 0 ? `${count} ${labels[index] || 'Players'}` : ''
+    ).filter(Boolean).join(', ');
+    
+    return `${formation} (${description})`;
+  };
   const handleGenerateFormation = () => {
     if (!selectedSquadA || !selectedSquadB) {
       toast({
         title: "Missing Teams ❌",
         description: "Please select both Team A and Team B",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedFormationA || !selectedFormationB) {
+      toast({
+        title: "Missing Formations ❌",
+        description: "Please select formations for both teams",
         variant: "destructive",
       });
       return;
@@ -132,7 +164,7 @@ const MatchTools = () => {
 
     const formation: Formation = {
       id: `formation-${Date.now()}`,
-      name: `${squadA.name} vs ${squadB.name}`,
+      name: `${squadA.name} (${selectedFormationA}) vs ${squadB.name} (${selectedFormationB})`,
       mode: selectedMode,
       teamA: squadA.players,
       teamB: squadB.players,
@@ -310,9 +342,7 @@ const MatchTools = () => {
                 <span className="text-sm font-medium">{mode.label}</span>
               </Button>
             ))}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
+          </div>          <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Team A</Label>
               <Select value={selectedSquadA} onValueChange={setSelectedSquadA}>
@@ -346,10 +376,42 @@ const MatchTools = () => {
             </div>
           </div>
 
-          <Button 
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Formation for Team A</Label>
+              <Select value={selectedFormationA} onValueChange={setSelectedFormationA}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select formation for Team A" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formationOptions[selectedMode].map((formation) => (
+                    <SelectItem key={formation} value={formation}>
+                      🔴 {getFormationLabel(formation)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Formation for Team B</Label>
+              <Select value={selectedFormationB} onValueChange={setSelectedFormationB}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select formation for Team B" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formationOptions[selectedMode].map((formation) => (
+                    <SelectItem key={formation} value={formation}>
+                      🔵 {getFormationLabel(formation)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>          <Button 
             onClick={handleGenerateFormation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
-            disabled={!selectedSquadA || !selectedSquadB}
+            disabled={!selectedSquadA || !selectedSquadB || !selectedFormationA || !selectedFormationB}
           >
             Generate Formation 📋
           </Button>
@@ -358,10 +420,16 @@ const MatchTools = () => {
 
       {/* Generated Formation display section */}
       {generatedFormation && (
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-white border-[#B8CFCE]">
+        <div className="grid md:grid-cols-2 gap-6">          <Card className="bg-white border-[#B8CFCE]">
             <CardHeader>
-              <CardTitle className="text-[#333446]">🔴 {generatedFormation.teamA[0]?.name.split(' ')[0] || 'Team A'}</CardTitle>
+              <CardTitle className="text-[#333446]">
+                🔴 {generatedFormation.teamA[0]?.name.split(' ')[0] || 'Team A'}
+                {selectedFormationA && (
+                  <div className="text-sm text-[#7F8CAA] font-normal mt-1">
+                    Formation: {getFormationLabel(selectedFormationA)}
+                  </div>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -377,11 +445,16 @@ const MatchTools = () => {
                 ))}
               </div>
             </CardContent>
-          </Card>
-
-          <Card className="bg-white border-[#B8CFCE]">
+          </Card>          <Card className="bg-white border-[#B8CFCE]">
             <CardHeader>
-              <CardTitle className="text-[#333446]">🔵 {generatedFormation.teamB[0]?.name.split(' ')[0] || 'Team B'}</CardTitle>
+              <CardTitle className="text-[#333446]">
+                🔵 {generatedFormation.teamB[0]?.name.split(' ')[0] || 'Team B'}
+                {selectedFormationB && (
+                  <div className="text-sm text-[#7F8CAA] font-normal mt-1">
+                    Formation: {getFormationLabel(selectedFormationB)}
+                  </div>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
