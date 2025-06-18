@@ -423,30 +423,45 @@ const MatchTools = () => {
                 <span className="font-medium">{mode.label}</span>
               </Button>
             ))}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Select Goalkeepers</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-              {players.filter(p => p.position === 'GK').map((player) => (
-                <div key={player.id} className="flex items-center space-x-2 p-2 rounded bg-[#EAEFEF]">
-                  <Checkbox
-                    checked={selectedGoalkeepers.includes(player.id)}
-                    onCheckedChange={(checked) => handleGoalkeeperSelection(player.id, checked as boolean)}
-                  />
-                  <div className="flex items-center gap-1 flex-1 min-w-0">
-                    <span className="text-sm">🥅</span>
-                    <span className="text-sm font-medium text-[#333446] truncate">{player.name}</span>
+          </div>          <div className="space-y-2">
+            <Label>
+              {players.filter(p => p.position === 'GK').length > 0 
+                ? "Select Goalkeepers" 
+                : "Player Rotation (No Fixed Goalkeepers)"}
+            </Label>
+            {players.filter(p => p.position === 'GK').length === 0 && (
+              <p className="text-sm text-[#7F8CAA] italic">
+                No fixed goalkeepers found. All players will be included in rotation automatically.
+              </p>
+            )}
+            {players.filter(p => p.position === 'GK').length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                {players.filter(p => p.position === 'GK').map((player) => (
+                  <div key={player.id} className="flex items-center space-x-2 p-2 rounded bg-[#EAEFEF]">
+                    <Checkbox
+                      checked={selectedGoalkeepers.includes(player.id)}
+                      onCheckedChange={(checked) => handleGoalkeeperSelection(player.id, checked as boolean)}
+                    />
+                    <div className="flex items-center gap-1 flex-1 min-w-0">
+                      <span className="text-sm">🥅</span>
+                      <span className="text-sm font-medium text-[#333446] truncate">{player.name}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>          <Button 
             onClick={handleGenerateRotation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
             disabled={players.filter(p => p.position === 'GK').length > 0}
+            title={players.filter(p => p.position === 'GK').length > 0 
+              ? "Disabled: Fixed goalkeepers found" 
+              : "Click to generate rotation for all players"}
           >
             Generate Rotation 🔄
+            {players.filter(p => p.position === 'GK').length === 0 && (
+              <span className="ml-2 text-xs">(All Players)</span>
+            )}
           </Button>
         </CardContent>
       </Card>
