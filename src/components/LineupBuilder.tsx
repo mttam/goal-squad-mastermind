@@ -56,13 +56,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const positions: FieldPlayer[] = [];
     const fieldWidth = 300; // Width for vertical field
     const fieldHeight = 400; // Height for vertical field
-    const isTeamB = team === 'B';    
-    // Goalkeeper position (top for Team A, bottom for Team B)
+    const isTeamB = team === 'B';      // Goalkeeper position (top for Team A, bottom for Team B)
     const gkPlayer = teamPlayers.find(p => p.position === 'GK') || teamPlayers[0];
     positions.push({
       id: parseInt(gkPlayer.id),
-      x: fieldWidth / 2,
-      y: isTeamB ? fieldHeight - 25 : 25,
+      x: fieldWidth * 0.5, // Center horizontally (50% of field width)
+      y: isTeamB ? fieldHeight * 0.9 : fieldHeight * 0.1, // 10% from top/bottom
       isGK: true,
       team,
       originalPlayer: gkPlayer
@@ -70,7 +69,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const availableHeight = (fieldHeight / 2) - 50; // Space from goal to center
+    const availableHeight = fieldHeight * 0.4; // 40% of field height for formation
     const sectionHeight = availableHeight / sectionsCount;
     
     outfieldPlayers.forEach((player, index) => {
@@ -79,12 +78,13 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionY = isTeamB 
-        ? fieldHeight - 40 - (sectionIndex + 1) * sectionHeight // Start from bottom goal
-        : 40 + (sectionIndex + 1) * sectionHeight; // Start from top goal
+        ? fieldHeight * 0.8 - (sectionIndex + 1) * sectionHeight // Start from 80% for Team B
+        : fieldHeight * 0.2 + (sectionIndex + 1) * sectionHeight; // Start from 20% for Team A
       
-      // Center players horizontally with better spacing
-      const availableWidth = fieldWidth - 80; // Leave margins
-      const playerX = 40 + (availableWidth / (playersInSection + 1)) * (positionInSection + 1);
+      // Center players horizontally with relative spacing
+      const marginRatio = 0.15; // 15% margins on each side
+      const availableWidth = fieldWidth * (1 - 2 * marginRatio);
+      const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (positionInSection + 1);
       
       positions.push({
         id: parseInt(player.id),
@@ -101,29 +101,29 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const positions: FieldPlayer[] = [];
     const fieldWidth = 300; // Width for vertical field
     const fieldHeight = 400; // Height for vertical field
-    
-    // Team A (top side - blue)
+      // Team A (top side - blue)
     positions.push({
       id: 1,
-      x: fieldWidth / 2,
-      y: 25,
+      x: fieldWidth * 0.5, // Center horizontally (50% of field width)
+      y: fieldHeight * 0.1, // 10% from top
       isGK: true,
       team: 'A'
     });    const formationPartsA = formationA.split('-').map(Number);
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const availableHeightA = (fieldHeight / 2) - 50; // Space from goal to center
+    const availableHeightA = fieldHeight * 0.4; // 40% of field height for formation
     const sectionHeightA = availableHeightA / sectionsCountA;
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      // Start from goal area (y=40) and move towards center
-      const sectionY = 40 + (sectionIndex + 1) * sectionHeightA;
+      // Start from 20% of field height and move towards center
+      const sectionY = fieldHeight * 0.2 + (sectionIndex + 1) * sectionHeightA;
       
       for (let i = 0; i < playersInSection; i++) {
-        // Center players horizontally with better spacing
-        const availableWidth = fieldWidth - 80; // Leave margins
-        const playerX = 40 + (availableWidth / (playersInSection + 1)) * (i + 1);
+        // Center players horizontally with relative spacing
+        const marginRatio = 0.15; // 15% margins on each side
+        const availableWidth = fieldWidth * (1 - 2 * marginRatio);
+        const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (i + 1);
         positions.push({
           id: playerId,
           x: playerX,
@@ -132,29 +132,28 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         });
         playerId++;
       }
-    });
-
-    // Team B (bottom side - red)
+    });    // Team B (bottom side - red)
     positions.push({
       id: playerId,
-      x: fieldWidth / 2,
-      y: fieldHeight - 25,
+      x: fieldWidth * 0.5, // Center horizontally (50% of field width)
+      y: fieldHeight * 0.9, // 10% from bottom
       isGK: true,
       team: 'B'
     });
     playerId++;    const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const availableHeightB = (fieldHeight / 2) - 50; // Space from goal to center
+    const availableHeightB = fieldHeight * 0.4; // 40% of field height for formation
     const sectionHeightB = availableHeightB / sectionsCountB;
 
     formationPartsB.forEach((playersInSection, sectionIndex) => {
-      // Start from goal area (y=fieldHeight-40) and move towards center
-      const sectionY = fieldHeight - 40 - (sectionIndex + 1) * sectionHeightB;
+      // Start from 80% of field height and move towards center
+      const sectionY = fieldHeight * 0.8 - (sectionIndex + 1) * sectionHeightB;
       
       for (let i = 0; i < playersInSection; i++) {
-        // Center players horizontally with better spacing
-        const availableWidth = fieldWidth - 80; // Leave margins
-        const playerX = 40 + (availableWidth / (playersInSection + 1)) * (i + 1);
+        // Center players horizontally with relative spacing
+        const marginRatio = 0.15; // 15% margins on each side
+        const availableWidth = fieldWidth * (1 - 2 * marginRatio);
+        const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (i + 1);
         positions.push({
           id: playerId,
           x: playerX,
