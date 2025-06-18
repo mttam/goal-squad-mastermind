@@ -169,10 +169,11 @@ const MatchTools = () => {
       teamA: squadA.players,
       teamB: squadB.players,
       createdAt: new Date(),
-    };
-
-    setGeneratedFormation(formation);
+    };    setGeneratedFormation(formation);
     addFormation(formation);
+
+    // Auto-sync rotation mode with formation mode
+    setRotationMode(selectedMode);
 
     toast({
       title: "Formation Created! ⚽",
@@ -186,27 +187,32 @@ const MatchTools = () => {
     } else {
       setSelectedGoalkeepers(prev => prev.filter(id => id !== playerId));
     }
-  };
-  const handleGenerateRotation = () => {
-    const hasFixedGoalkeepers = players.filter(p => p.position === 'GK').length > 0;
+  };  const handleGenerateRotation = () => {
+    // Use formation players if available, otherwise use all players
+    const allPlayersForRotation = generatedFormation 
+      ? [...generatedFormation.teamA, ...generatedFormation.teamB]
+      : players;
+    
+    const hasFixedGoalkeepers = allPlayersForRotation.filter(p => p.position === 'GK').length > 0;
     
     let playersForRotation: Player[];
     
     if (hasFixedGoalkeepers) {
       // If there are fixed goalkeepers, this function shouldn't be called
-      // But just in case, use selected goalkeepers
-      if (selectedGoalkeepers.length === 0) {
+      // But just in case, use selected goalkeepers from the formation
+      const availableGoalkeepers = allPlayersForRotation.filter(p => p.position === 'GK');
+      if (availableGoalkeepers.length === 0) {
         toast({
-          title: "No Goalkeepers Selected ❌",
-          description: "Please select at least one goalkeeper",
+          title: "No Goalkeepers Available ❌",
+          description: "No goalkeepers found in the selected formation",
           variant: "destructive",
         });
         return;
       }
-      playersForRotation = players.filter(p => selectedGoalkeepers.includes(p.id));
+      playersForRotation = availableGoalkeepers;
     } else {
       // No fixed goalkeepers - use all players for rotation
-      playersForRotation = players;
+      playersForRotation = allPlayersForRotation;
     }
 
     if (playersForRotation.length === 0) {
@@ -248,10 +254,15 @@ const MatchTools = () => {
 
     setRotationSchedule({ teamA: teamASchedule, teamB: teamBSchedule });
 
-    toast({      title: "Rotation Generated! 🔄",
+    const rotationSource = generatedFormation 
+      ? `formation "${generatedFormation.name}"`
+      : "all players";
+
+    toast({
+      title: "Rotation Generated! 🔄",
       description: hasFixedGoalkeepers 
-        ? `Goalkeeper rotation created for ${rotationMode} mode`
-        : `Player rotation created for ${rotationMode} mode - all players will rotate as goalkeeper`,
+        ? `Goalkeeper rotation created for ${rotationMode} mode using ${rotationSource}`
+        : `Player rotation created for ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper`,
     });
   };
 
@@ -472,12 +483,15 @@ const MatchTools = () => {
             </CardContent>
           </Card>
         </div>
-      )}
-
-      {/* Goalkeeper Rotation Generator section */}
+      )}      {/* Goalkeeper Rotation Generator section */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
           <CardTitle className="text-[#333446]">Goalkeeper Rotation Generator 🔄</CardTitle>
+          <p className="text-sm text-[#7F8CAA]">
+            {generatedFormation 
+              ? `Using players from: ${generatedFormation.name}` 
+              : "Generate a formation above to use specific teams, or select rotation mode for all players"}
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -496,94 +510,270 @@ const MatchTools = () => {
                 <span className="font-medium">{mode.label}</span>
               </Button>
             ))}
-          </div>          <div className="space-y-2">
+          </div>
+
+          {/* Team Selection for Rotation */}
+          {generatedFormation && (
+            <div className="p-3 bg-[#EAEFEF] rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm font-medium text-[#333446]">Using Formation:</span>
+                <span className="text-sm text-[#7F8CAA]">{generatedFormation.name}</span>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-[#333446]">🔴 Team A:</span>
+                  <span className="ml-2 text-[#7F8CAA]">{generatedFormation.teamA.length} players</span>
+                  {selectedFormationA && (
+                    <span className="ml-2 text-[#7F8CAA]">({selectedFormationA})</span>
+                  )}
+                </div>
+                <div>
+                  <span className="font-medium text-[#333446]">🔵 Team B:</span>
+                  <span className="ml-2 text-[#7F8CAA]">{generatedFormation.teamB.length} players</span>
+                  {selectedFormationB && (
+                    <span className="ml-2 text-[#7F8CAA]">({selectedFormationB})</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}          <div className="space-y-2">
             <Label>
-              {players.filter(p => p.position === 'GK').length > 0 
+              {(generatedFormation 
+                ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+                : players.filter(p => p.position === 'GK').length) > 0 
                 ? "Select Goalkeepers" 
                 : "Player Rotation (No Fixed Goalkeepers)"}
             </Label>
-            {players.filter(p => p.position === 'GK').length === 0 && (
+            {(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) === 0 && (
               <p className="text-sm text-[#7F8CAA] italic">
-                No fixed goalkeepers found. All players will be included in rotation automatically.
+                {generatedFormation 
+                  ? "No fixed goalkeepers found in formation. All formation players will be included in rotation automatically."
+                  : "No fixed goalkeepers found. All players will be included in rotation automatically."}
               </p>
             )}
-            {players.filter(p => p.position === 'GK').length > 0 && (
+            {(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                {players.filter(p => p.position === 'GK').map((player) => (
-                  <div key={player.id} className="flex items-center space-x-2 p-2 rounded bg-[#EAEFEF]">
-                    <Checkbox
-                      checked={selectedGoalkeepers.includes(player.id)}
-                      onCheckedChange={(checked) => handleGoalkeeperSelection(player.id, checked as boolean)}
-                    />
-                    <div className="flex items-center gap-1 flex-1 min-w-0">
-                      <span className="text-sm">🥅</span>
-                      <span className="text-sm font-medium text-[#333446] truncate">{player.name}</span>
-                    </div>
-                  </div>
-                ))}
+                {(generatedFormation 
+                  ? [...generatedFormation.teamA, ...generatedFormation.teamB] 
+                  : players)
+                  .filter(p => p.position === 'GK')
+                  .map((player) => {
+                    const teamLabel = generatedFormation 
+                      ? (generatedFormation.teamA.find(p => p.id === player.id) ? '🔴' : '🔵')
+                      : '';
+                    return (
+                      <div key={player.id} className="flex items-center space-x-2 p-2 rounded bg-[#EAEFEF]">
+                        <Checkbox
+                          checked={selectedGoalkeepers.includes(player.id)}
+                          onCheckedChange={(checked) => handleGoalkeeperSelection(player.id, checked as boolean)}
+                        />
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                          <span className="text-sm">🥅</span>
+                          {teamLabel && <span className="text-sm">{teamLabel}</span>}
+                          <span className="text-sm font-medium text-[#333446] truncate">{player.name}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </div>          <Button 
             onClick={handleGenerateRotation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
-            disabled={players.filter(p => p.position === 'GK').length > 0}
-            title={players.filter(p => p.position === 'GK').length > 0 
+            disabled={(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) > 0}
+            title={(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) > 0 
               ? "Disabled: Fixed goalkeepers found" 
               : "Click to generate rotation for all players"}
           >
             Generate Rotation 🔄
-            {players.filter(p => p.position === 'GK').length === 0 && (
-              <span className="ml-2 text-xs">(All Players)</span>
+            {(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) === 0 && (
+              <span className="ml-2 text-xs">
+                ({generatedFormation ? 'Formation Players' : 'All Players'})
+              </span>
             )}
           </Button>
         </CardContent>
-      </Card>
-
-      {/* Rotation Schedule display */}
+      </Card>      {/* Rotation Schedule display */}
       {rotationSchedule && (
-        <div className="grid md:grid-cols-2 gap-4">
-          <Card className="bg-white border-[#B8CFCE]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[#333446] text-lg">🔴 Team A Rotation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {rotationSchedule.teamA.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded bg-[#EAEFEF] text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-[#333446] w-4">{item.segment}</span>
-                      <span>🥅</span>
-                      <span className="font-medium text-[#333446]">{item.goalkeeper.name}</span>
+        <div className="space-y-4">
+          {generatedFormation && (
+            <div className="text-center p-3 bg-[#EAEFEF] rounded-lg">
+              <h3 className="font-medium text-[#333446]">Rotation Schedule for:</h3>
+              <p className="text-sm text-[#7F8CAA]">{generatedFormation.name}</p>
+              <p className="text-xs text-[#7F8CAA] mt-1">Mode: {rotationMode}</p>
+            </div>
+          )}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card className="bg-white border-[#B8CFCE]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[#333446] text-lg">
+                  🔴 Team A Rotation
+                  {selectedFormationA && (
+                    <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationA})</span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {rotationSchedule.teamA.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded bg-[#EAEFEF] text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#333446] w-8">#{item.segment}</span>
+                        <span>🥅</span>
+                        <span className="font-medium text-[#333446]">{item.goalkeeper.name}</span>
+                        <span className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-white border-[#B8CFCE]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-[#333446] text-lg">🔵 Team B Rotation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-1 max-h-48 overflow-y-auto">
-                {rotationSchedule.teamB.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 rounded bg-[#EAEFEF] text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-[#333446] w-4">{item.segment}</span>
-                      <span>🥅</span>
-                      <span className="font-medium text-[#333446]">{item.goalkeeper.name}</span>
+            <Card className="bg-white border-[#B8CFCE]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-[#333446] text-lg">
+                  🔵 Team B Rotation
+                  {selectedFormationB && (
+                    <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationB})</span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {rotationSchedule.teamB.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 rounded bg-[#EAEFEF] text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#333446] w-8">#{item.segment}</span>
+                        <span>🥅</span>
+                        <span className="font-medium text-[#333446]">{item.goalkeeper.name}</span>
+                        <span className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}      
+      {/* Interactive Lineup Builder - now integrated with Formation Generator */}
+      <Card className="bg-white border-[#B8CFCE]">
+        <CardHeader>
+          <CardTitle className="text-[#333446]">Interactive Lineup Builder ⚽</CardTitle>
+          <p className="text-sm text-[#7F8CAA]">
+            {generatedFormation 
+              ? `Visual lineup for: ${generatedFormation.name}`
+              : "Generate a formation above to see the interactive lineup"}
+          </p>
+        </CardHeader>
+        <CardContent>
+          {generatedFormation ? (
+            <div className="space-y-4">
+              {/* Formation Summary */}
+              <div className="grid md:grid-cols-2 gap-4 p-3 bg-[#EAEFEF] rounded-lg">
+                <div className="text-center">
+                  <div className="text-sm font-medium text-[#333446]">🔴 Team A Formation</div>
+                  <div className="text-lg font-bold text-[#333446]">
+                    {selectedFormationA || 'Custom'}
+                  </div>
+                  {selectedFormationA && (
+                    <div className="text-xs text-[#7F8CAA]">
+                      {getFormationLabel(selectedFormationA).split('(')[1]?.replace(')', '') || ''}
+                    </div>
+                  )}
+                </div>
+                <div className="text-center">
+                  <div className="text-sm font-medium text-[#333446]">🔵 Team B Formation</div>
+                  <div className="text-lg font-bold text-[#333446]">
+                    {selectedFormationB || 'Custom'}
+                  </div>
+                  {selectedFormationB && (
+                    <div className="text-xs text-[#7F8CAA]">
+                      {getFormationLabel(selectedFormationB).split('(')[1]?.replace(')', '') || ''}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* LineupBuilder Component */}
+              <LineupBuilder formation={generatedFormation} />
+              
+              {/* Additional Formation Stats */}
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div className="p-3 bg-[#EAEFEF] rounded-lg">
+                  <h4 className="font-medium text-[#333446] mb-2">🔴 Team A Stats</h4>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span>Total Players:</span>
+                      <span className="font-medium">{generatedFormation.teamA.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Goalkeepers:</span>
+                      <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'GK').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Defenders:</span>
+                      <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'DEF').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Midfielders:</span>
+                      <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'MID').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Attackers:</span>
+                      <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'ATT').length}</span>
                     </div>
                   </div>
-                ))}
+                </div>
+                
+                <div className="p-3 bg-[#EAEFEF] rounded-lg">
+                  <h4 className="font-medium text-[#333446] mb-2">🔵 Team B Stats</h4>
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span>Total Players:</span>
+                      <span className="font-medium">{generatedFormation.teamB.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Goalkeepers:</span>
+                      <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'GK').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Defenders:</span>
+                      <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'DEF').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Midfielders:</span>
+                      <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'MID').length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Attackers:</span>
+                      <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'ATT').length}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      
-      {/* Interactive Lineup Builder - now integrated with Formation Generator */}
-      <LineupBuilder formation={generatedFormation} />
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">⚽</div>
+              <p className="text-[#7F8CAA] mb-4">No formation generated yet</p>
+              <p className="text-sm text-[#7F8CAA]">
+                Use the Formation Generator above to create a formation and see the interactive lineup
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
       
       {/* Dues Management section with all the existing logic and UI */}
       <Card className="bg-white border-[#B8CFCE]">
