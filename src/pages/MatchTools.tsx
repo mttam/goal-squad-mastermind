@@ -188,34 +188,48 @@ const MatchTools = () => {
       setSelectedGoalkeepers(prev => prev.filter(id => id !== playerId));
     }
   };  const handleGenerateRotation = () => {
-    // Use formation players if available, otherwise use all players
-    const allPlayersForRotation = generatedFormation 
-      ? [...generatedFormation.teamA, ...generatedFormation.teamB]
-      : players;
-    
-    const hasFixedGoalkeepers = allPlayersForRotation.filter(p => p.position === 'GK').length > 0;
-    
-    let playersForRotation: Player[];
-    
+    let teamAPlayers: Player[] = [];
+    let teamBPlayers: Player[] = [];
+
+    // Get players from formation if available, otherwise from manual selection
+    if (generatedFormation) {
+      teamAPlayers = generatedFormation.teamA;
+      teamBPlayers = generatedFormation.teamB;
+    } else {
+      // Fallback to using available players (this could be enhanced to allow manual team selection)
+      const allPlayers = players;
+      const halfwayPoint = Math.ceil(allPlayers.length / 2);
+      teamAPlayers = allPlayers.slice(0, halfwayPoint);
+      teamBPlayers = allPlayers.slice(halfwayPoint);
+    }
+
+    const hasFixedGoalkeepersA = teamAPlayers.some(p => p.position === 'GK');
+    const hasFixedGoalkeepersB = teamBPlayers.some(p => p.position === 'GK');
+    const hasFixedGoalkeepers = hasFixedGoalkeepersA || hasFixedGoalkeepersB;
+
+    let teamARotationPlayers: Player[] = [];
+    let teamBRotationPlayers: Player[] = [];
+
     if (hasFixedGoalkeepers) {
-      // If there are fixed goalkeepers, this function shouldn't be called
-      // But just in case, use selected goalkeepers from the formation
-      const availableGoalkeepers = allPlayersForRotation.filter(p => p.position === 'GK');
-      if (availableGoalkeepers.length === 0) {
+      // Use only goalkeepers for rotation
+      teamARotationPlayers = teamAPlayers.filter(p => p.position === 'GK');
+      teamBRotationPlayers = teamBPlayers.filter(p => p.position === 'GK');
+      
+      if (teamARotationPlayers.length === 0 && teamBRotationPlayers.length === 0) {
         toast({
           title: "No Goalkeepers Available ❌",
-          description: "No goalkeepers found in the selected formation",
+          description: "No goalkeepers found in the selected teams",
           variant: "destructive",
         });
         return;
       }
-      playersForRotation = availableGoalkeepers;
     } else {
-      // No fixed goalkeepers - use all players for rotation
-      playersForRotation = allPlayersForRotation;
+      // Use all players for goalkeeper rotation
+      teamARotationPlayers = teamAPlayers;
+      teamBRotationPlayers = teamBPlayers;
     }
 
-    if (playersForRotation.length === 0) {
+    if (teamARotationPlayers.length === 0 && teamBRotationPlayers.length === 0) {
       toast({
         title: "No Players Available ❌",
         description: "No players found for rotation",
@@ -231,38 +245,55 @@ const MatchTools = () => {
       '8vs8': 16,
     }[rotationMode] || 10;
 
-    const segmentsPerPlayer = Math.floor(segmentsPerMatch / playersForRotation.length);
-    const extraSegments = segmentsPerMatch % playersForRotation.length;
+    const halfSegments = Math.floor(segmentsPerMatch / 2);
 
+    // Generate Team A rotation schedule
     const teamASchedule: {segment: number, goalkeeper: Player}[] = [];
-    const teamBSchedule: {segment: number, goalkeeper: Player}[] = [];
+    if (teamARotationPlayers.length > 0) {
+      const segmentsPerPlayerA = Math.floor(halfSegments / teamARotationPlayers.length);
+      const extraSegmentsA = halfSegments % teamARotationPlayers.length;
 
-    let currentSegment = 1;
-    
-    playersForRotation.forEach((player, index) => {
-      const segments = segmentsPerPlayer + (index < extraSegments ? 1 : 0);
-      
-      for (let i = 0; i < segments; i++) {
-        if (currentSegment % 2 === 1) {
-          teamASchedule.push({ segment: currentSegment, goalkeeper: player });
-        } else {
-          teamBSchedule.push({ segment: currentSegment, goalkeeper: player });
+      let segmentIndex = 0;
+      teamARotationPlayers.forEach((player, playerIndex) => {
+        const segments = segmentsPerPlayerA + (playerIndex < extraSegmentsA ? 1 : 0);
+        
+        for (let i = 0; i < segments; i++) {
+          const segmentNumber = (segmentIndex * 2) + 1; // Odd segments for Team A
+          teamASchedule.push({ segment: segmentNumber, goalkeeper: player });
+          segmentIndex++;
         }
-        currentSegment++;
-      }
-    });
+      });
+    }
+
+    // Generate Team B rotation schedule  
+    const teamBSchedule: {segment: number, goalkeeper: Player}[] = [];
+    if (teamBRotationPlayers.length > 0) {
+      const segmentsPerPlayerB = Math.floor(halfSegments / teamBRotationPlayers.length);
+      const extraSegmentsB = halfSegments % teamBRotationPlayers.length;
+
+      let segmentIndex = 0;
+      teamBRotationPlayers.forEach((player, playerIndex) => {
+        const segments = segmentsPerPlayerB + (playerIndex < extraSegmentsB ? 1 : 0);
+        
+        for (let i = 0; i < segments; i++) {
+          const segmentNumber = (segmentIndex * 2) + 2; // Even segments for Team B
+          teamBSchedule.push({ segment: segmentNumber, goalkeeper: player });
+          segmentIndex++;
+        }
+      });
+    }
 
     setRotationSchedule({ teamA: teamASchedule, teamB: teamBSchedule });
 
     const rotationSource = generatedFormation 
       ? `formation "${generatedFormation.name}"`
-      : "all players";
+      : "available players";
 
     toast({
       title: "Rotation Generated! 🔄",
       description: hasFixedGoalkeepers 
-        ? `Goalkeeper rotation created for ${rotationMode} mode using ${rotationSource}`
-        : `Player rotation created for ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper`,
+        ? `Separate goalkeeper rotations created for each team in ${rotationMode} mode using ${rotationSource}`
+        : `Separate player rotations created for each team in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper`,
     });
   };
 
@@ -590,15 +621,15 @@ const MatchTools = () => {
             title={(generatedFormation 
               ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
               : players.filter(p => p.position === 'GK').length) > 0 
-              ? "Disabled: Fixed goalkeepers found" 
-              : "Click to generate rotation for all players"}
+              ? "Disabled: Fixed goalkeepers found - separate rotations not needed" 
+              : "Click to generate separate goalkeeper rotations for each team"}
           >
             Generate Rotation 🔄
             {(generatedFormation 
               ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
               : players.filter(p => p.position === 'GK').length) === 0 && (
               <span className="ml-2 text-xs">
-                ({generatedFormation ? 'Formation Players' : 'All Players'})
+                (Separate Teams)
               </span>
             )}
           </Button>
