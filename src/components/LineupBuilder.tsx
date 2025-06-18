@@ -70,7 +70,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const availableHeight = fieldHeight - 120; // More compact vertical spacing
+    const availableHeight = (fieldHeight / 2) - 50; // Space from goal to center
     const sectionHeight = availableHeight / sectionsCount;
     
     outfieldPlayers.forEach((player, index) => {
@@ -79,8 +79,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionY = isTeamB 
-        ? fieldHeight - 60 - sectionIndex * sectionHeight - sectionHeight / 2
-        : 60 + sectionIndex * sectionHeight + sectionHeight / 2;
+        ? fieldHeight - 40 - (sectionIndex + 1) * sectionHeight // Start from bottom goal
+        : 40 + (sectionIndex + 1) * sectionHeight; // Start from top goal
       
       // Center players horizontally with better spacing
       const availableWidth = fieldWidth - 80; // Leave margins
@@ -113,11 +113,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const availableHeightA = (fieldHeight / 2) - 80; // More compact spacing
+    const availableHeightA = (fieldHeight / 2) - 50; // Space from goal to center
     const sectionHeightA = availableHeightA / sectionsCountA;
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      const sectionY = 50 + sectionIndex * sectionHeightA + sectionHeightA / 2;
+      // Start from goal area (y=40) and move towards center
+      const sectionY = 40 + (sectionIndex + 1) * sectionHeightA;
       
       for (let i = 0; i < playersInSection; i++) {
         // Center players horizontally with better spacing
@@ -143,11 +144,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
     playerId++;    const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const availableHeightB = (fieldHeight / 2) - 80; // More compact spacing
+    const availableHeightB = (fieldHeight / 2) - 50; // Space from goal to center
     const sectionHeightB = availableHeightB / sectionsCountB;
 
     formationPartsB.forEach((playersInSection, sectionIndex) => {
-      const sectionY = fieldHeight - 50 - sectionIndex * sectionHeightB - sectionHeightB / 2;
+      // Start from goal area (y=fieldHeight-40) and move towards center
+      const sectionY = fieldHeight - 40 - (sectionIndex + 1) * sectionHeightB;
       
       for (let i = 0; i < playersInSection; i++) {
         // Center players horizontally with better spacing
