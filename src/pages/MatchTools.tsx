@@ -704,9 +704,10 @@ const MatchTools = () => {
                 Use the Formation Generator above to create a formation and see the interactive lineup
               </p>
             </div>
-          )}
-        </CardContent>
+             </CardContent>
       </Card>
+          )}
+       
       
       {/* Dues Management section with all the existing logic and UI */}
       <Card className="bg-white border-[#B8CFCE]">
