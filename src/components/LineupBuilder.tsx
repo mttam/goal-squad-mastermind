@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MatchMode, MinimalFormation, Player } from '@/types/fantacalcietto';
+import { MatchMode, Formation, Player } from '@/types/fantacalcietto';
 
 interface LineupBuilderProps {
   className?: string;
-  formation?: MinimalFormation | null;
+  formation?: Formation | null;
 }
 
 interface FieldPlayer {
@@ -35,13 +35,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
   useEffect(() => {
     if (formation) {
       setSelectedMode(formation.mode);
-      setSelectedFormationA(formation.formationA);
-      setSelectedFormationB(formation.formationB);
-      const teamAPlayers = generateFormationPositions(formation.formationA, 'A', formation.mode);
-      const teamBPlayers = generateFormationPositions(formation.formationB, 'B', formation.mode);
+      const teamAPlayers = generateTeamPositions(formation.teamA, 'A', formation.mode);
+      const teamBPlayers = generateTeamPositions(formation.teamB, 'B', formation.mode);
       setPlayers([...teamAPlayers, ...teamBPlayers]);
     }
   }, [formation]);
+
   // Recalculate positions when field becomes available or dimensions change
   useEffect(() => {
     if (!fieldRef.current) return;
@@ -49,12 +48,13 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const recalculatePositions = () => {
       if (players.length > 0) {
         if (formation) {
-          // Regenerate from formation data using formation codes
-          const teamAPlayers = generateFormationPositions(formation.formationA, 'A', formation.mode);
-          const teamBPlayers = generateFormationPositions(formation.formationB, 'B', formation.mode);
-          setPlayers([...teamAPlayers, ...teamBPlayers]);        } else if (selectedFormationA && selectedFormationB) {
+          // Regenerate from formation data
+          const teamAPlayers = generateTeamPositions(formation.teamA, 'A', formation.mode);
+          const teamBPlayers = generateTeamPositions(formation.teamB, 'B', formation.mode);
+          setPlayers([...teamAPlayers, ...teamBPlayers]);
+        } else if (selectedFormationA && selectedFormationB) {
           // Regenerate from selected formations
-          const newPositions = generateBothTeamsFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+          const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
           setPlayers(newPositions);
         }
       }
@@ -70,10 +70,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [players.length, formation, selectedFormationA, selectedFormationB, selectedMode]);
+
   // Additional effect to handle initial positioning when formations are first applied
   useEffect(() => {
     if (selectedFormationA && selectedFormationB && fieldRef.current && players.length === 0) {
-      const newPositions = generateBothTeamsFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+      const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
       setPlayers(newPositions);
     }
   }, [selectedFormationA, selectedFormationB, selectedMode]);
@@ -131,7 +132,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
 
     return positions;
-  };  const generateBothTeamsFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
+  };  const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
     // Get field dimensions from the actual div element, fallback to default values
     const fieldWidth = fieldRef.current?.clientWidth || 300;
@@ -200,62 +201,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
 
     return positions;
-  };  // Generate positions for a single team based on formation code
-  const generateFormationPositions = (formationCode: string, team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
-    const positions: FieldPlayer[] = [];
-    // Get field dimensions from the actual div element, fallback to default values
-    const fieldWidth = fieldRef.current?.clientWidth || 300;
-    const fieldHeight = fieldRef.current?.clientHeight || 400;
-    const isTeamB = team === 'B';
-    
-    // Start with unique player IDs based on team
-    let playerId = team === 'A' ? 1 : 100;
-
-    // Goalkeeper position (top for Team A, bottom for Team B)
-    positions.push({
-      id: playerId,
-      x: fieldWidth * 0.5, // Center horizontally (50% of field width)
-      y: isTeamB ? fieldHeight * 0.9 : fieldHeight * 0.1, // 10% from top/bottom
-      isGK: true,
-      team
-    });
-    playerId++;
-
-    // Parse formation code (e.g., '3-1' -> [3, 1])
-    const formationParts = formationCode.split('-').map(Number);
-    const sectionsCount = formationParts.length;
-    const availableHeight = fieldHeight * 0.25; // 25% of field height for formation
-    const sectionHeight = availableHeight / sectionsCount;
-    
-    formationParts.forEach((playersInSection, sectionIndex) => {
-      // Calculate Y position based on team and section
-      const sectionY = isTeamB 
-        ? fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeight // Start from 75% for Team B
-        : fieldHeight * 0.12 + (sectionIndex + 1) * sectionHeight; // Start from 12% for Team A (closer to GK)
-      
-      // Distribute players horizontally in the section
-      for (let i = 0; i < playersInSection; i++) {
-        // Center players horizontally with relative spacing
-        const marginRatio = 0.15; // 15% margins on each side
-        const availableWidth = fieldWidth * (1 - 2 * marginRatio);
-        const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (i + 1);
-        
-        positions.push({
-          id: playerId,
-          x: playerX,
-          y: sectionY,
-          team
-        });
-        playerId++;
-      }
-    });
-
-    return positions;
-  };
-  const handleFormationSelect = () => {
+  };  const handleFormationSelect = () => {
     if (!selectedFormationA || !selectedFormationB) return;
     
-    const newPositions = generateBothTeamsFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
+    const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
     setPlayers(newPositions);
   };
 

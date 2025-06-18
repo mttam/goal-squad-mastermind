@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
-import { Player, Squad, Formation, MinimalFormation, Due, MatchMode } from '@/types/fantacalcietto';
+import { Player, Squad, Formation, Due, MatchMode } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
 import LineupBuilder from '@/components/LineupBuilder';
 
@@ -18,7 +18,7 @@ const MatchTools = () => {
   const [selectedSquadB, setSelectedSquadB] = useState('');
   const [selectedFormationA, setSelectedFormationA] = useState('');
   const [selectedFormationB, setSelectedFormationB] = useState('');
-  const [generatedFormation, setGeneratedFormation] = useState<MinimalFormation | null>(null);
+  const [generatedFormation, setGeneratedFormation] = useState<Formation | null>(null);
   const [rotationMode, setRotationMode] = useState<MatchMode>('5vs5');
   const [selectedGoalkeepers, setSelectedGoalkeepers] = useState<string[]>([]);
   const [rotationSchedule, setRotationSchedule] = useState<{teamA: {segment: number, goalkeeper: Player}[], teamB: {segment: number, goalkeeper: Player}[]} | null>(null);
@@ -56,9 +56,7 @@ const MatchTools = () => {
       console.error('Error loading data from localStorage:', error);
     }
   }, []);
-  // Note: Formation storage is handled by addFormation in the generation function
-  // generatedFormation is now MinimalFormation and only used for LineupBuilder
-  /*
+
   // Save formations to localStorage whenever generatedFormation changes
   useEffect(() => {
     if (generatedFormation) {
@@ -80,7 +78,6 @@ const MatchTools = () => {
       }
     }
   }, [generatedFormation]);
-  */
 
   // Save dues to localStorage whenever dues change
   useEffect(() => {
@@ -163,28 +160,17 @@ const MatchTools = () => {
         variant: "destructive",
       });
       return;
-    }    // Create the full formation for storage
-    const fullFormation: Formation = {
+    }
+
+    const formation: Formation = {
       id: `formation-${Date.now()}`,
       name: `${squadA.name} (${selectedFormationA}) vs ${squadB.name} (${selectedFormationB})`,
       mode: selectedMode,
       teamA: squadA.players,
       teamB: squadB.players,
       createdAt: new Date(),
-    };
-
-    // Create the minimal formation for the LineupBuilder
-    const minimalFormation: MinimalFormation = {
-      id: fullFormation.id,
-      name: fullFormation.name,
-      mode: selectedMode,
-      formationA: selectedFormationA,
-      formationB: selectedFormationB,
-      createdAt: new Date(),
-    };
-
-    setGeneratedFormation(minimalFormation);
-    addFormation(fullFormation); // Still save the full formation for other uses
+    };    setGeneratedFormation(formation);
+    addFormation(formation);
 
     // Auto-sync rotation mode with formation mode
     setRotationMode(selectedMode);
@@ -205,17 +191,12 @@ const MatchTools = () => {
     let teamAPlayers: Player[] = [];
     let teamBPlayers: Player[] = [];
 
-    // Get players from the stored formations using the generatedFormation ID
+    // Get players from formation if available, otherwise from manual selection
     if (generatedFormation) {
-      const storedFormation = formations.find(f => f.id === generatedFormation.id);
-      if (storedFormation) {
-        teamAPlayers = storedFormation.teamA;
-        teamBPlayers = storedFormation.teamB;
-      }
-    }
-    
-    // Fallback if no stored formation found
-    if (teamAPlayers.length === 0 || teamBPlayers.length === 0) {
+      teamAPlayers = generatedFormation.teamA;
+      teamBPlayers = generatedFormation.teamB;
+    } else {
+      // Fallback to using available players (this could be enhanced to allow manual team selection)
       const allPlayers = players;
       const halfwayPoint = Math.ceil(allPlayers.length / 2);
       teamAPlayers = allPlayers.slice(0, halfwayPoint);
@@ -355,34 +336,6 @@ const MatchTools = () => {
 
   const financialSummary = calculateFinancialSummary();
 
-  // Helper function to get players from the stored formation
-  const getFormationPlayers = (): { teamA: Player[], teamB: Player[] } => {
-    if (generatedFormation) {
-      const storedFormation = formations.find(f => f.id === generatedFormation.id);
-      if (storedFormation) {
-        return {
-          teamA: storedFormation.teamA,
-          teamB: storedFormation.teamB
-        };
-      }
-    }
-    return { teamA: [], teamB: [] };
-  };
-
-  // Helper function to get all players (formation or fallback to all players)
-  const getAllPlayers = (): Player[] => {
-    if (generatedFormation) {
-      const { teamA, teamB } = getFormationPlayers();
-      return [...teamA, ...teamB];
-    }
-    return players;
-  };
-
-  // Helper function to get goalkeepers count
-  const getGoalkeepersCount = (): number => {
-    return getAllPlayers().filter(p => p.position === 'GK').length;
-  };
-
   return (
     <div className="container mx-auto p-4 space-y-6">
       <div className="text-center space-y-2">
@@ -487,33 +440,63 @@ const MatchTools = () => {
             Generate Formation 📋
           </Button>
         </CardContent>
-      </Card>      {/* Generated Formation display section */}
+      </Card>
+
+      {/* Generated Formation display section */}
       {generatedFormation && (
-        <Card className="bg-white border-[#B8CFCE]">
-          <CardHeader>
-            <CardTitle className="text-[#333446]">Formation Generated ⚽</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-6">          <Card className="bg-white border-[#B8CFCE]">
+            <CardHeader>
+              <CardTitle className="text-[#333446]">
+                🔴 {generatedFormation.teamA[0]?.name.split(' ')[0] || 'Team A'}
+                {selectedFormationA && (
+                  <div className="text-sm text-[#7F8CAA] font-normal mt-1">
+                    Formation: {getFormationLabel(selectedFormationA)}
+                  </div>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-2">
-                <h3 className="font-semibold text-[#333446]">🔴 Team A</h3>
-                <p className="text-[#7F8CAA]">Formation: {getFormationLabel(generatedFormation.formationA)}</p>
-                <p className="text-[#7F8CAA]">Mode: {generatedFormation.mode}</p>
+                {generatedFormation.teamA.map((player, index) => (
+                  <div key={player.id} className="flex items-center gap-3 p-2 rounded-lg bg-[#EAEFEF]">
+                    <span className="font-bold text-[#333446] w-6">{index + 1}</span>
+                    <span className="text-lg">{getPositionEmoji(player.position)}</span>
+                    <div className="flex-1">
+                      <div className="font-medium text-[#333446]">{player.name}</div>
+                      <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
+            </CardContent>
+          </Card>          <Card className="bg-white border-[#B8CFCE]">
+            <CardHeader>
+              <CardTitle className="text-[#333446]">
+                🔵 {generatedFormation.teamB[0]?.name.split(' ')[0] || 'Team B'}
+                {selectedFormationB && (
+                  <div className="text-sm text-[#7F8CAA] font-normal mt-1">
+                    Formation: {getFormationLabel(selectedFormationB)}
+                  </div>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-2">
-                <h3 className="font-semibold text-[#333446]">🔵 Team B</h3>
-                <p className="text-[#7F8CAA]">Formation: {getFormationLabel(generatedFormation.formationB)}</p>
-                <p className="text-[#7F8CAA]">Mode: {generatedFormation.mode}</p>
+                {generatedFormation.teamB.map((player, index) => (
+                  <div key={player.id} className="flex items-center gap-3 p-2 rounded-lg bg-[#EAEFEF]">
+                    <span className="font-bold text-[#333446] w-6">{index + 1}</span>
+                    <span className="text-lg">{getPositionEmoji(player.position)}</span>
+                    <div className="flex-1">
+                      <div className="font-medium text-[#333446]">{player.name}</div>
+                      <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="mt-4 p-3 bg-[#EAEFEF] rounded-lg">
-              <p className="text-sm text-[#7F8CAA]">
-                Formation ready for Interactive Lineup Builder below 👇
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}{/* Goalkeeper Rotation Generator section */}
+            </CardContent>
+          </Card>
+        </div>
+      )}      {/* Goalkeeper Rotation Generator section */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
           <CardTitle className="text-[#333446]">Goalkeeper Rotation Generator 🔄</CardTitle>
@@ -573,21 +556,27 @@ const MatchTools = () => {
                 : players.filter(p => p.position === 'GK').length) > 0 
                 ? "Select Goalkeepers" 
                 : "Player Rotation (No Fixed Goalkeepers)"}
-            </Label>            {getGoalkeepersCount() === 0 && (
+            </Label>
+            {(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) === 0 && (
               <p className="text-sm text-[#7F8CAA] italic">
                 {generatedFormation 
                   ? "No fixed goalkeepers found in formation. All formation players will be included in rotation automatically."
                   : "No fixed goalkeepers found. All players will be included in rotation automatically."}
               </p>
             )}
-            {getGoalkeepersCount() > 0 && (
+            {(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                {getAllPlayers()
+                {(generatedFormation 
+                  ? [...generatedFormation.teamA, ...generatedFormation.teamB] 
+                  : players)
                   .filter(p => p.position === 'GK')
                   .map((player) => {
-                    const { teamA } = getFormationPlayers();
                     const teamLabel = generatedFormation 
-                      ? (teamA.find(p => p.id === player.id) ? '🔴' : '🔵')
+                      ? (generatedFormation.teamA.find(p => p.id === player.id) ? '🔴' : '🔵')
                       : '';
                     return (
                       <div key={player.id} className="flex items-center space-x-2 p-2 rounded bg-[#EAEFEF]">
@@ -608,12 +597,23 @@ const MatchTools = () => {
           </div>          <Button 
             onClick={handleGenerateRotation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
-            disabled={getGoalkeepersCount() > 0}
-            title={getGoalkeepersCount() > 0 
+            disabled={(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) > 0}
+            title={(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) > 0 
               ? "Disabled: Fixed goalkeepers found - separate rotations not needed" 
-              : "Click to generate separate goalkeeper rotations for each team"}          >
+              : "Click to generate separate goalkeeper rotations for each team"}
+          >
             Generate Rotation 🔄
-            {getGoalkeepersCount() > 0 ? ' (Disabled)' : ''}
+            {(generatedFormation 
+              ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
+              : players.filter(p => p.position === 'GK').length) === 0 && (
+              <span className="ml-2 text-xs">
+                (Separate Teams)
+              </span>
+            )}
           </Button>
         </CardContent>
       </Card>      {/* Rotation Schedule display */}
