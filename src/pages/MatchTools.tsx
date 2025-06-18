@@ -690,7 +690,7 @@ const MatchTools = () => {
       )}      
       {/* Interactive Lineup Builder - Clean Integration */}
       {generatedFormation ? (
-        <LineupBuilder formation={generatedFormation} />
+        <LineupBuilder />
       ) : (
         <Card className="bg-white border-[#B8CFCE]">
           <CardHeader>
