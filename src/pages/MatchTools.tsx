@@ -236,64 +236,46 @@ const MatchTools = () => {
         variant: "destructive",
       });
       return;
-    }
-
-    const segmentsPerMatch = {
-      '5vs5': 10,
-      '6vs6': 12,
-      '7vs7': 14,
-      '8vs8': 16,
-    }[rotationMode] || 10;
-
-    const halfSegments = Math.floor(segmentsPerMatch / 2);
+    }    const segmentsPerTeam = {
+      '5vs5': 5,
+      '6vs6': 6,
+      '7vs7': 7,
+      '8vs8': 8,
+    }[rotationMode] || 5;
 
     // Generate Team A rotation schedule
     const teamASchedule: {segment: number, goalkeeper: Player}[] = [];
     if (teamARotationPlayers.length > 0) {
-      const segmentsPerPlayerA = Math.floor(halfSegments / teamARotationPlayers.length);
-      const extraSegmentsA = halfSegments % teamARotationPlayers.length;
-
-      let segmentIndex = 0;
-      teamARotationPlayers.forEach((player, playerIndex) => {
-        const segments = segmentsPerPlayerA + (playerIndex < extraSegmentsA ? 1 : 0);
-        
-        for (let i = 0; i < segments; i++) {
-          const segmentNumber = (segmentIndex * 2) + 1; // Odd segments for Team A
-          teamASchedule.push({ segment: segmentNumber, goalkeeper: player });
-          segmentIndex++;
-        }
-      });
+      for (let segment = 1; segment <= segmentsPerTeam; segment++) {
+        const playerIndex = (segment - 1) % teamARotationPlayers.length;
+        teamASchedule.push({ 
+          segment: segment, 
+          goalkeeper: teamARotationPlayers[playerIndex] 
+        });
+      }
     }
 
     // Generate Team B rotation schedule  
     const teamBSchedule: {segment: number, goalkeeper: Player}[] = [];
     if (teamBRotationPlayers.length > 0) {
-      const segmentsPerPlayerB = Math.floor(halfSegments / teamBRotationPlayers.length);
-      const extraSegmentsB = halfSegments % teamBRotationPlayers.length;
-
-      let segmentIndex = 0;
-      teamBRotationPlayers.forEach((player, playerIndex) => {
-        const segments = segmentsPerPlayerB + (playerIndex < extraSegmentsB ? 1 : 0);
-        
-        for (let i = 0; i < segments; i++) {
-          const segmentNumber = (segmentIndex * 2) + 2; // Even segments for Team B
-          teamBSchedule.push({ segment: segmentNumber, goalkeeper: player });
-          segmentIndex++;
-        }
-      });
+      for (let segment = 1; segment <= segmentsPerTeam; segment++) {
+        const playerIndex = (segment - 1) % teamBRotationPlayers.length;
+        teamBSchedule.push({ 
+          segment: segment, 
+          goalkeeper: teamBRotationPlayers[playerIndex] 
+        });
+      }
     }
 
     setRotationSchedule({ teamA: teamASchedule, teamB: teamBSchedule });
 
     const rotationSource = generatedFormation 
       ? `formation "${generatedFormation.name}"`
-      : "available players";
-
-    toast({
+      : "available players";    toast({
       title: "Rotation Generated! 🔄",
       description: hasFixedGoalkeepers 
-        ? `Separate goalkeeper rotations created for each team in ${rotationMode} mode using ${rotationSource}`
-        : `Separate player rotations created for each team in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper`,
+        ? `Separate goalkeeper rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode using ${rotationSource}`
+        : `Separate player rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper`,
     });
   };
 
