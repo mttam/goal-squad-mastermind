@@ -348,7 +348,6 @@ const MatchTools = () => {
       description: `Added due for ${due.playerName}`,
     });
   };
-
   const handleLoadPlayersFromFormation = () => {
     if (!generatedFormation) {
       toast({
@@ -359,11 +358,19 @@ const MatchTools = () => {
       return;
     }
 
+    if (!newDue.amount || newDue.amount <= 0) {
+      toast({
+        title: "Missing Amount ❌",
+        description: "Please enter an amount before loading players from formation",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Get all players from both teams
     const allFormationPlayers = [...generatedFormation.teamA, ...generatedFormation.teamB];
     
-    // Add dues for each player with default amount
-    const defaultAmount = 10; // Default due amount
+    // Add dues for each player using the specified amount
     let addedCount = 0;
     
     allFormationPlayers.forEach(player => {
@@ -374,23 +381,21 @@ const MatchTools = () => {
         const due: Due = {
           id: `due-${Date.now()}-${player.id}`,
           playerName: player.name,
-          amount: defaultAmount,
-          description: `Formation: ${generatedFormation.name}`,
+          amount: newDue.amount,
+          description: newDue.description || `Formation: ${generatedFormation.name}`,
           paid: false,
           date: new Date(),
-          actualPaid: undefined,
-          change: undefined,
+          actualPaid: newDue.actualPaid || undefined,
+          change: newDue.change || undefined,
         };
         
         addDue(due);
         addedCount++;
       }
-    });
-
-    if (addedCount > 0) {
+    });    if (addedCount > 0) {
       toast({
         title: "Players Loaded! 💰",
-        description: `Added ${addedCount} player dues from formation (€${defaultAmount} each). Players with existing dues were skipped.`,
+        description: `Added ${addedCount} player dues from formation (€${newDue.amount} each). Players with existing dues were skipped.`,
       });
     } else {
       toast({
@@ -813,32 +818,39 @@ const MatchTools = () => {
                 onChange={(e) => setNewDue({...newDue, playerName: e.target.value})}
                 placeholder="Enter player name"
               />
-            </div>
-            <div className="space-y-2">
+            </div>            <div className="space-y-2">
               <Label>Amount (€)</Label>
               <Input
                 type="number"
                 value={newDue.amount}
-                onChange={(e) => setNewDue({...newDue, amount: Number(e.target.value)})}
+                onChange={(e) => {
+                  const amount = Number(e.target.value);
+                  const change = newDue.actualPaid - amount;
+                  setNewDue({...newDue, amount, change});
+                }}
                 placeholder="0"
               />
-            </div>
-            <div className="space-y-2">
+            </div><div className="space-y-2">
               <Label>Actual Paid (€)</Label>
               <Input
                 type="number"
                 value={newDue.actualPaid}
-                onChange={(e) => setNewDue({...newDue, actualPaid: Number(e.target.value)})}
+                onChange={(e) => {
+                  const actualPaid = Number(e.target.value);
+                  const change = actualPaid - newDue.amount;
+                  setNewDue({...newDue, actualPaid, change});
+                }}
                 placeholder="0"
               />
             </div>
             <div className="space-y-2">
-              <Label>Change (€)</Label>
+              <Label>Change (€) - Auto calculated</Label>
               <Input
                 type="number"
                 value={newDue.change}
-                onChange={(e) => setNewDue({...newDue, change: Number(e.target.value)})}
-                placeholder="0"
+                readOnly
+                className="bg-gray-100"
+                placeholder="Auto calculated: Actual Paid - Amount"
               />
             </div>
             <div className="space-y-2">
@@ -858,8 +870,15 @@ const MatchTools = () => {
             Add Due 💰
           </Button>          <Button 
             onClick={handleLoadPlayersFromFormation}
-            className="bg-[#4CAF50] text-white hover:bg-[#66BB6A]"
-            disabled={!generatedFormation}
+            className="bg-[#4CAF50] text-white hover:bg-[#66BB6A] disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!generatedFormation || !newDue.amount || newDue.amount <= 0}
+            title={
+              !generatedFormation 
+                ? "Generate a formation first" 
+                : (!newDue.amount || newDue.amount <= 0)
+                  ? "Enter an amount first"
+                  : "Load all players from the current formation"
+            }
           >
             Load All Players from Formation 👥
           </Button>
