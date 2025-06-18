@@ -712,7 +712,7 @@ const MatchTools = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                    � Team A Details
+                    🔴 Team A Details
                     {selectedFormationA && (
                       <span className="text-xs bg-blue-100 px-2 py-1 rounded">
                         {selectedFormationA}
@@ -745,7 +745,7 @@ const MatchTools = () => {
                 
                 <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                   <h4 className="font-bold text-red-800 mb-3 flex items-center gap-2">
-                    � Team B Details
+                    🔵 Team B Details
                     {selectedFormationB && (
                       <span className="text-xs bg-red-100 px-2 py-1 rounded">
                         {selectedFormationB}
