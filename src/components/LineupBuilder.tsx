@@ -190,8 +190,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         const marginRatio = 0.15; // 15% margins on each side
         const availableWidth = fieldWidth * (1 - 2 * marginRatio);
         const playerX = fieldWidth * marginRatio + (availableWidth / (playersInSection + 1)) * (i + 1);
+        let playerB = (playerId-playerId)+1;
         positions.push({
-          id: playerId,
+          id: playerB,
           x: playerX,
           y: sectionY,
           team: 'B'
