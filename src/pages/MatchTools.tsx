@@ -16,9 +16,9 @@ const MatchTools = () => {
 
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');  const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
-  const [selectedFormationA, setSelectedFormationA] = useState('');
-  const [selectedFormationB, setSelectedFormationB] = useState('');
+  const [selectedFormationA, setSelectedFormationA] = useState('');  const [selectedFormationB, setSelectedFormationB] = useState('');
   const [generatedFormation, setGeneratedFormation] = useState<Formation | null>(null);
+  const [generatedDataForLineup, setGeneratedDataForLineup] = useState<{mode: MatchMode, teamA: string, teamB: string} | null>(null);
   const [rotationMode, setRotationMode] = useState<MatchMode>('5vs5');
   const [selectedGoalkeepers, setSelectedGoalkeepers] = useState<string[]>([]);
   const [rotationSchedule, setRotationSchedule] = useState<{teamA: {segment: number, goalkeeper: Player}[], teamB: {segment: number, goalkeeper: Player}[]} | null>(null);
@@ -160,24 +160,31 @@ const MatchTools = () => {
         variant: "destructive",
       });
       return;
-    }
-
-    const formation: Formation = {
+    }    const formation: Formation = {
       id: `formation-${Date.now()}`,
       name: `${squadA.name} (${selectedFormationA}) vs ${squadB.name} (${selectedFormationB})`,
       mode: selectedMode,
       teamA: squadA.players,
       teamB: squadB.players,
       createdAt: new Date(),
-    };    setGeneratedFormation(formation);
+    };
+
+    // Create minimal data for LineupBuilder
+    const generatedDataForLineup = {
+      mode: selectedMode,
+      teamA: selectedFormationA,
+      teamB: selectedFormationB
+    };
+
+    setGeneratedFormation(formation);
+    setGeneratedDataForLineup(generatedDataForLineup);
     addFormation(formation);
 
     // Auto-sync rotation mode with formation mode
-    setRotationMode(selectedMode);
-
-    // Debug: Log the generated formation
-    console.log('🔍 Generated Formation:', formation);
-    console.log('📋 Formation Details:', {
+    setRotationMode(selectedMode);    // Debug: Log both formation structures
+    console.log('🔍 Generated Formation (Full):', formation);
+    console.log('� Generated Data for LineupBuilder:', generatedDataForLineup);
+    console.log('� Formation Details:', {
       id: formation.id,
       name: formation.name,
       mode: formation.mode,
@@ -703,10 +710,9 @@ const MatchTools = () => {
             </Card>
           </div>
         </div>
-      )}      
-      {/* Interactive Lineup Builder - Clean Integration */}
-      {generatedFormation ? (
-        <LineupBuilder />
+      )}        {/* Interactive Lineup Builder - Using minimal formation data */}
+      {generatedDataForLineup ? (
+        <LineupBuilder formationData={generatedDataForLineup} />
       ) : (
         <Card className="bg-white border-[#B8CFCE]">
           <CardHeader>
@@ -720,9 +726,9 @@ const MatchTools = () => {
                 Use the Formation Generator above to create a formation and see the interactive lineup
               </p>
             </div>
-             </CardContent>
-      </Card>
-          )}
+          </CardContent>
+        </Card>
+      )}
        
       
       {/* Dues Management section with all the existing logic and UI */}
