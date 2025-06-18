@@ -98,8 +98,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionY = isTeamB 
-        ? fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeight // Start from 75% for Team B (reduced from 80%)
-        : fieldHeight * 0.15 + (sectionIndex + 1) * sectionHeight; // Start from 15% for Team A (reduced from 20%)
+        ? fieldHeight * 0.65 - (sectionIndex + 1) * sectionHeight // Start from 65% for Team B (reduced from 80%)
+        : fieldHeight * 0.05 + (sectionIndex + 1) * sectionHeight; // Start from 5% for Team A (reduced from 20%)
       
       // Center players horizontally with relative spacing
       const marginRatio = 0.15; // 15% margins on each side
