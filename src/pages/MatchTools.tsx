@@ -155,12 +155,32 @@ const MatchTools = () => {
       setSelectedGoalkeepers(prev => prev.filter(id => id !== playerId));
     }
   };
-
   const handleGenerateRotation = () => {
-    if (selectedGoalkeepers.length === 0) {
+    const hasFixedGoalkeepers = players.filter(p => p.position === 'GK').length > 0;
+    
+    let playersForRotation: Player[];
+    
+    if (hasFixedGoalkeepers) {
+      // If there are fixed goalkeepers, this function shouldn't be called
+      // But just in case, use selected goalkeepers
+      if (selectedGoalkeepers.length === 0) {
+        toast({
+          title: "No Goalkeepers Selected ❌",
+          description: "Please select at least one goalkeeper",
+          variant: "destructive",
+        });
+        return;
+      }
+      playersForRotation = players.filter(p => selectedGoalkeepers.includes(p.id));
+    } else {
+      // No fixed goalkeepers - use all players for rotation
+      playersForRotation = players;
+    }
+
+    if (playersForRotation.length === 0) {
       toast({
-        title: "No Goalkeepers Selected ❌",
-        description: "Please select at least one goalkeeper",
+        title: "No Players Available ❌",
+        description: "No players found for rotation",
         variant: "destructive",
       });
       return;
@@ -173,23 +193,22 @@ const MatchTools = () => {
       '8vs8': 16,
     }[rotationMode] || 10;
 
-    const goalkeepers = players.filter(p => selectedGoalkeepers.includes(p.id));
-    const segmentsPerGK = Math.floor(segmentsPerMatch / goalkeepers.length);
-    const extraSegments = segmentsPerMatch % goalkeepers.length;
+    const segmentsPerPlayer = Math.floor(segmentsPerMatch / playersForRotation.length);
+    const extraSegments = segmentsPerMatch % playersForRotation.length;
 
     const teamASchedule: {segment: number, goalkeeper: Player}[] = [];
     const teamBSchedule: {segment: number, goalkeeper: Player}[] = [];
 
     let currentSegment = 1;
     
-    goalkeepers.forEach((gk, index) => {
-      const segments = segmentsPerGK + (index < extraSegments ? 1 : 0);
+    playersForRotation.forEach((player, index) => {
+      const segments = segmentsPerPlayer + (index < extraSegments ? 1 : 0);
       
       for (let i = 0; i < segments; i++) {
         if (currentSegment % 2 === 1) {
-          teamASchedule.push({ segment: currentSegment, goalkeeper: gk });
+          teamASchedule.push({ segment: currentSegment, goalkeeper: player });
         } else {
-          teamBSchedule.push({ segment: currentSegment, goalkeeper: gk });
+          teamBSchedule.push({ segment: currentSegment, goalkeeper: player });
         }
         currentSegment++;
       }
@@ -197,9 +216,10 @@ const MatchTools = () => {
 
     setRotationSchedule({ teamA: teamASchedule, teamB: teamBSchedule });
 
-    toast({
-      title: "Rotation Generated! 🔄",
-      description: `Created goalkeeper rotation for ${goalkeepers.length} goalkeepers`,
+    toast({      title: "Rotation Generated! 🔄",
+      description: hasFixedGoalkeepers 
+        ? `Goalkeeper rotation created for ${rotationMode} mode`
+        : `Player rotation created for ${rotationMode} mode - all players will rotate as goalkeeper`,
     });
   };
 
@@ -421,12 +441,10 @@ const MatchTools = () => {
                 </div>
               ))}
             </div>
-          </div>
-
-          <Button 
+          </div>          <Button 
             onClick={handleGenerateRotation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
-            disabled={selectedGoalkeepers.length === 0}
+            disabled={players.filter(p => p.position === 'GK').length > 0}
           >
             Generate Rotation 🔄
           </Button>
