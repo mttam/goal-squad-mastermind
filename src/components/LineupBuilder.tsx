@@ -4,9 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MatchMode, Formation, Player } from '@/types/fantacalcietto';
 
+interface MinimalFormationData {
+  mode: MatchMode;
+  teamA: string; // formation code like "1-3-1"
+  teamB: string; // formation code like "1-1-3"
+}
+
 interface LineupBuilderProps {
   className?: string;
-  formation?: Formation | null;
+  formation?: Formation | null; // Keep for backward compatibility
+  formationData?: MinimalFormationData | null; // New minimal data prop
 }
 
 interface FieldPlayer {
@@ -18,7 +25,7 @@ interface FieldPlayer {
   originalPlayer?: Player;
 }
 
-const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) => {
+const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, formationData }) => {
   const formations = {
     '5vs5': ['3-1', '2-2', '1-3', '2-1-1', '1-2-1', '1-1-2'],
     '6vs6': ['4-1', '3-2', '2-3', '1-4', '3-1-1', '2-2-1', '2-1-2', '1-3-1', '1-2-2', '1-1-3'],
@@ -31,24 +38,34 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
   const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-  const fieldRef = useRef<HTMLDivElement>(null);  // Update when formation prop changes
+  const fieldRef = useRef<HTMLDivElement>(null);  // Update when formation prop changes OR when formationData prop changes
   useEffect(() => {
-    if (formation) {
+    if (formationData) {
+      // Use minimal formation data
+      setSelectedMode(formationData.mode);
+      setSelectedFormationA(formationData.teamA);
+      setSelectedFormationB(formationData.teamB);
+      const newPositions = generateFormationPositions(formationData.teamA, formationData.teamB, formationData.mode);
+      setPlayers(newPositions);
+    } else if (formation) {
+      // Fallback to old formation data for backward compatibility
       setSelectedMode(formation.mode);
       const teamAPlayers = generateTeamPositions(formation.teamA, 'A', formation.mode);
       const teamBPlayers = generateTeamPositions(formation.teamB, 'B', formation.mode);
       setPlayers([...teamAPlayers, ...teamBPlayers]);
     }
-  }, [formation]);
+  }, [formation, formationData]);
 
   // Recalculate positions when field becomes available or dimensions change
   useEffect(() => {
-    if (!fieldRef.current) return;
-
-    const recalculatePositions = () => {
+    if (!fieldRef.current) return;    const recalculatePositions = () => {
       if (players.length > 0) {
-        if (formation) {
-          // Regenerate from formation data
+        if (formationData) {
+          // Regenerate from minimal formation data
+          const newPositions = generateFormationPositions(formationData.teamA, formationData.teamB, formationData.mode);
+          setPlayers(newPositions);
+        } else if (formation) {
+          // Regenerate from full formation data
           const teamAPlayers = generateTeamPositions(formation.teamA, 'A', formation.mode);
           const teamBPlayers = generateTeamPositions(formation.teamB, 'B', formation.mode);
           setPlayers([...teamAPlayers, ...teamBPlayers]);
@@ -69,7 +86,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [players.length, formation, selectedFormationA, selectedFormationB, selectedMode]);
+  }, [players.length, formation, formationData, selectedFormationA, selectedFormationB, selectedMode]);
 
   // Additional effect to handle initial positioning when formations are first applied
   useEffect(() => {
@@ -310,7 +327,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         <CardTitle className="text-[#333446]">Interactive Lineup Builder ⚽</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!formation && (
+        {!formation && !formationData && (
           <>
             {/* Mode Selection */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -383,10 +400,13 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
 
         {/* Field */}
         {players.length > 0 && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333446]">
-              {formation ? `${formation.name} - Formation View` : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
-            </label>            <div
+          <div className="space-y-2">            <label className="text-sm font-medium text-[#333446]">
+              {formationData 
+                ? `${formationData.teamA} vs ${formationData.teamB} (${formationData.mode})` 
+                : formation 
+                  ? `${formation.name} - Formation View` 
+                  : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
+            </label><div
               ref={fieldRef}
               className="relative w-full h-96 bg-gradient-to-b from-green-400 to-green-500 border-4 border-[#333446] rounded-lg overflow-hidden cursor-crosshair"
               onMouseMove={handleMouseMove}
