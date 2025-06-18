@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import LineupBuilder from '@/components/LineupBuilder';
 
 const MatchTools = () => {
-  const { players, squads, formations, dues, addFormation, addDue, updateDue } = useFantacalcietto();
+  const { players, squads, formations, dues, addFormation, addDue, updateDue, setDues } = useFantacalcietto();
   const { toast } = useToast();
 
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');  const [selectedSquadA, setSelectedSquadA] = useState('');
@@ -349,12 +349,55 @@ const MatchTools = () => {
     });
   };
 
-  const handlePayDue = (dueId: string) => {
-    updateDue(dueId, { paid: true });
-    toast({
-      title: "Due Paid! ✅",
-      description: "Due has been marked as paid",
+  const handleLoadPlayersFromFormation = () => {
+    if (!generatedFormation) {
+      toast({
+        title: "No Formation Available ❌",
+        description: "Please generate a formation first to load players",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get all players from both teams
+    const allFormationPlayers = [...generatedFormation.teamA, ...generatedFormation.teamB];
+    
+    // Add dues for each player with default amount
+    const defaultAmount = 10; // Default due amount
+    let addedCount = 0;
+    
+    allFormationPlayers.forEach(player => {
+      // Check if player already has a due
+      const existingDue = dues.find(due => due.playerName.toLowerCase() === player.name.toLowerCase());
+      
+      if (!existingDue) {
+        const due: Due = {
+          id: `due-${Date.now()}-${player.id}`,
+          playerName: player.name,
+          amount: defaultAmount,
+          description: `Formation: ${generatedFormation.name}`,
+          paid: false,
+          date: new Date(),
+          actualPaid: undefined,
+          change: undefined,
+        };
+        
+        addDue(due);
+        addedCount++;
+      }
     });
+
+    if (addedCount > 0) {
+      toast({
+        title: "Players Loaded! 💰",
+        description: `Added ${addedCount} player dues from formation (€${defaultAmount} each). Players with existing dues were skipped.`,
+      });
+    } else {
+      toast({
+        title: "No New Players Added 💰",
+        description: "All players from the formation already have dues assigned",
+      });
+    }
   };
 
   const calculateFinancialSummary = () => {
@@ -366,6 +409,32 @@ const MatchTools = () => {
       .reduce((sum, due) => sum + due.amount, 0);
 
     return { totalDues, totalActualPaid, totalChange, totalRemaining };
+  };
+
+  const handlePayDue = (dueId: string) => {
+    updateDue(dueId, { paid: true });
+    toast({
+      title: "Payment Recorded ✅",
+      description: "Due has been marked as paid",
+    });
+  };
+
+  const handleDeleteDue = (dueId: string) => {
+    const updatedDues = dues.filter(due => due.id !== dueId);
+    setDues(updatedDues);
+    
+    toast({
+      title: "Due Deleted 🗑️",
+      description: "Due entry has been removed",
+    });
+  };
+
+  const handleEditDue = (dueId: string, updatedDue: Partial<Due>) => {
+    updateDue(dueId, updatedDue);
+    toast({
+      title: "Due Updated ✏️",
+      description: "Due entry has been modified",
+    });
   };
 
   const financialSummary = calculateFinancialSummary();
@@ -726,8 +795,7 @@ const MatchTools = () => {
                 Use the Formation Generator above to create a formation and see the interactive lineup
               </p>
             </div>
-          </CardContent>
-        </Card>
+          </CardContent>        </Card>
       )}
        
       
@@ -788,6 +856,12 @@ const MatchTools = () => {
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
           >
             Add Due 💰
+          </Button>          <Button 
+            onClick={handleLoadPlayersFromFormation}
+            className="bg-[#4CAF50] text-white hover:bg-[#66BB6A]"
+            disabled={!generatedFormation}
+          >
+            Load All Players from Formation 👥
           </Button>
 
           {dues.length > 0 && (
