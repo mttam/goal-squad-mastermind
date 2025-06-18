@@ -69,7 +69,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
-    const availableHeight = fieldHeight * 0.4; // 40% of field height for formation
+    const availableHeight = fieldHeight * 0.3; // 30% of field height for formation (reduced to prevent overlap)
     const sectionHeight = availableHeight / sectionsCount;
     
     outfieldPlayers.forEach((player, index) => {
@@ -78,8 +78,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
       const playersInSection = Math.ceil(outfieldPlayers.length / sectionsCount);
       
       const sectionY = isTeamB 
-        ? fieldHeight * 0.8 - (sectionIndex + 1) * sectionHeight // Start from 80% for Team B
-        : fieldHeight * 0.2 + (sectionIndex + 1) * sectionHeight; // Start from 20% for Team A
+        ? fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeight // Start from 75% for Team B (reduced from 80%)
+        : fieldHeight * 0.15 + (sectionIndex + 1) * sectionHeight; // Start from 15% for Team A (reduced from 20%)
       
       // Center players horizontally with relative spacing
       const marginRatio = 0.15; // 15% margins on each side
@@ -112,12 +112,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     let playerId = 2;
     
     const sectionsCountA = formationPartsA.length;
-    const availableHeightA = fieldHeight * 0.4; // 40% of field height for formation
+    const availableHeightA = fieldHeight * 0.3; // 30% of field height for formation (reduced to prevent overlap)
     const sectionHeightA = availableHeightA / sectionsCountA;
     
     formationPartsA.forEach((playersInSection, sectionIndex) => {
-      // Start from 20% of field height and move towards center
-      const sectionY = fieldHeight * 0.2 + (sectionIndex + 1) * sectionHeightA;
+      // Start from 15% of field height and move towards center
+      const sectionY = fieldHeight * 0.15 + (sectionIndex + 1) * sectionHeightA;
       
       for (let i = 0; i < playersInSection; i++) {
         // Center players horizontally with relative spacing
@@ -132,7 +132,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
         });
         playerId++;
       }
-    });    // Team B (bottom side - red)
+    });// Team B (bottom side - red)
     positions.push({
       id: playerId,
       x: fieldWidth * 0.5, // Center horizontally (50% of field width)
@@ -142,12 +142,12 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     });
     playerId++;    const formationPartsB = formationB.split('-').map(Number);
     const sectionsCountB = formationPartsB.length;
-    const availableHeightB = fieldHeight * 0.4; // 40% of field height for formation
+    const availableHeightB = fieldHeight * 0.3; // 30% of field height for formation (reduced to prevent overlap)
     const sectionHeightB = availableHeightB / sectionsCountB;
 
     formationPartsB.forEach((playersInSection, sectionIndex) => {
-      // Start from 80% of field height and move towards center
-      const sectionY = fieldHeight * 0.8 - (sectionIndex + 1) * sectionHeightB;
+      // Start from 75% of field height and move towards center
+      const sectionY = fieldHeight * 0.75 - (sectionIndex + 1) * sectionHeightB;
       
       for (let i = 0; i < playersInSection; i++) {
         // Center players horizontally with relative spacing
@@ -180,20 +180,49 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
     setSelectedFormationB('');
     setPlayers([]);
   };
-
   const handleMouseDown = (playerId: number) => {
     setDraggedPlayer(playerId);
   };
 
+  const handleTouchStart = (playerId: number) => {
+    setDraggedPlayer(playerId);
+  };
+
+  const getEventCoordinates = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if ('touches' in e) {
+      // Touch event
+      return {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+    } else {
+      // Mouse event
+      return {
+        x: e.clientX,
+        y: e.clientY
+      };
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    handleMove(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Prevent scrolling
+    handleMove(e);
+  };
+
+  const handleMove = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (draggedPlayer === null || !fieldRef.current) return;
 
     const rect = fieldRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const coords = getEventCoordinates(e);
+    const x = coords.x - rect.left;
+    const y = coords.y - rect.top;
 
-    const boundedX = Math.max(15, Math.min(x, rect.width - 15)); // Adjusted from 20
-    const boundedY = Math.max(15, Math.min(y, rect.height - 15)); // Adjusted from 20
+    const boundedX = Math.max(15, Math.min(x, rect.width - 15));
+    const boundedY = Math.max(15, Math.min(y, rect.height - 15));
 
     setPlayers(prev => 
       prev.map(player => 
@@ -205,6 +234,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
   };
 
   const handleMouseUp = () => {
+    setDraggedPlayer(null);
+  };
+
+  const handleTouchEnd = () => {
     setDraggedPlayer(null);
   };
 
@@ -303,8 +336,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              style={{ userSelect: 'none' }}
-            >              {/* Soccer field markings */}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              style={{ userSelect: 'none', touchAction: 'none' }}
+            >{/* Soccer field markings */}
               <div className="absolute inset-0">
                 {/* Center line (horizontal) */}
                 <div className="absolute left-0 right-0 top-1/2 h-1 bg-white opacity-90 transform -translate-y-0.5"></div>
@@ -328,8 +363,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
               </div>
 
               {/* Players */}
-              {players.map((player) => (
-                <div
+              {players.map((player) => (                <div
                   key={player.id}
                   className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
                     player.isGK 
@@ -339,8 +373,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation }) =
                   style={{ 
                     left: player.x, 
                     top: player.y,
+                    touchAction: 'none'
                   }}
                   onMouseDown={() => handleMouseDown(player.id)}
+                  onTouchStart={() => handleTouchStart(player.id)}
                   title={player.originalPlayer?.name || `Player ${player.id}`}
                 >
                   {player.originalPlayer?.name.split(' ')[0].substring(0, 2).toUpperCase() || player.id}
