@@ -189,6 +189,17 @@ const MatchTools = () => {
     // Auto-sync rotation mode with formation mode
     setRotationMode(selectedMode);
 
+    // Debug: Log the generated formation
+    console.log('🔍 Generated Formation:', formation);
+    console.log('📋 Formation Details:', {
+      id: formation.id,
+      name: formation.name,
+      mode: formation.mode,
+      teamA: formation.teamA,
+      teamB: formation.teamB,
+      createdAt: formation.createdAt
+    });
+
     toast({
       title: "Formation Created! ⚽",
       description: `Match formation for ${selectedMode} mode is ready`,
