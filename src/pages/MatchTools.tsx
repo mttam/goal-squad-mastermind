@@ -676,7 +676,35 @@ const MatchTools = () => {
             </Card>
           </div>
         </div>
-      )}               
+      )}      
+      {/* Interactive Lineup Builder - now integrated with Formation Generator */}
+      <Card className="bg-white border-[#B8CFCE]">
+        <CardHeader>
+          <CardTitle className="text-[#333446]">Interactive Lineup Builder ⚽</CardTitle>
+          <p className="text-sm text-[#7F8CAA]">
+            {generatedFormation 
+              ? `Visual lineup for: ${generatedFormation.name}`
+              : "Generate a formation above to see the interactive lineup"}
+          </p>
+        </CardHeader>        <CardContent>
+          {generatedFormation ? (
+            <div className="space-y-6">
+              {/* Formation Summary Header */}
+              <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-red-50 rounded-lg border">
+                <h3 className="text-lg font-bold text-[#333446] mb-2">⚽ Interactive Formation View</h3>
+                <p className="text-sm text-[#7F8CAA]">{generatedFormation.name}</p>
+                <div className="flex justify-center gap-6 mt-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
+                    <span>Team A ({selectedFormationA || 'Custom'})</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                    <span>Team B ({selectedFormationB || 'Custom'})</span>
+                  </div>
+                </div>
+              </div>
+              
               {/* LineupBuilder Component - Main Focus */}
               <LineupBuilder formation={generatedFormation} />
               
@@ -684,7 +712,7 @@ const MatchTools = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                    🔴 Team A Details
+                    � Team A Details
                     {selectedFormationA && (
                       <span className="text-xs bg-blue-100 px-2 py-1 rounded">
                         {selectedFormationA}
@@ -697,32 +725,27 @@ const MatchTools = () => {
                       <span className="font-medium">{generatedFormation.teamA.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>🥅 Goalkeepers:</span>
+                      <span>Goalkeepers:</span>
                       <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'GK').length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>🛡️ Defenders:</span>
+                      <span>Defenders:</span>
                       <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'DEF').length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>⚙️ Midfielders:</span>
+                      <span>Midfielders:</span>
                       <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'MID').length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>⚔️ Attackers:</span>
+                      <span>Attackers:</span>
                       <span className="font-medium">{generatedFormation.teamA.filter(p => p.position === 'ATT').length}</span>
                     </div>
                   </div>
-                  {selectedFormationA && (
-                    <div className="mt-3 p-2 bg-blue-100 rounded text-xs text-blue-800">
-                      <strong>Formation:</strong> {getFormationLabel(selectedFormationA)}
-                    </div>
-                  )}
                 </div>
                 
                 <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                   <h4 className="font-bold text-red-800 mb-3 flex items-center gap-2">
-                    🔵 Team B Details
+                    � Team B Details
                     {selectedFormationB && (
                       <span className="text-xs bg-red-100 px-2 py-1 rounded">
                         {selectedFormationB}
@@ -735,29 +758,25 @@ const MatchTools = () => {
                       <span className="font-medium">{generatedFormation.teamB.length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>🥅 Goalkeepers:</span>
+                      <span>Goalkeepers:</span>
                       <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'GK').length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>🛡️ Defenders:</span>
+                      <span>Defenders:</span>
                       <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'DEF').length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>⚙️ Midfielders:</span>
+                      <span>Midfielders:</span>
                       <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'MID').length}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>⚔️ Attackers:</span>
+                      <span>Attackers:</span>
                       <span className="font-medium">{generatedFormation.teamB.filter(p => p.position === 'ATT').length}</span>
                     </div>
                   </div>
-                  {selectedFormationB && (
-                    <div className="mt-3 p-2 bg-red-100 rounded text-xs text-red-800">
-                      <strong>Formation:</strong> {getFormationLabel(selectedFormationB)}
-                    </div>
-                  )}
                 </div>
-              </div>            </div>
+              </div>
+            </div>
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">⚽</div>
