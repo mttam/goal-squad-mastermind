@@ -26,6 +26,15 @@ export interface Formation {
   createdAt: Date;
 }
 
+export interface MinimalFormation {
+  id: string;
+  name: string;
+  mode: MatchMode;
+  formationA: string; // Formation code like '3-1', '2-2', etc.
+  formationB: string; // Formation code like '3-1', '2-2', etc.
+  createdAt: Date;
+}
+
 export interface Due {
   id: string;
   playerName: string;
