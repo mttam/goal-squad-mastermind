@@ -569,20 +569,20 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                 {/* Show rotation schedule if available, otherwise show formation breakdown */}
                 {rotationSchedule ? (
                   <>
-                    <h4 className="text-sm font-medium text-[#333446] text-center">Team Rotation Schedule</h4>
+                    <h4 className="text-sm font-medium text-[#333446] text-center">Team Rotation</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {/* Team A Rotation */}
                       {rotationSchedule.teamA.length > 0 && (
                         <div className="bg-white rounded p-3 border-l-4 border-blue-600">
                           <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
                             <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                            Team A Rotation
+                            Team A 
                           </h5>
                           <div className="space-y-1 max-h-32 overflow-y-auto">
                             {rotationSchedule.teamA.map((item, index) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
                                 <span className="font-medium text-blue-600">#{item.segment}</span>
-                                <span>🥅</span>
+                                <span></span>
                                 <span className="text-[#333446] truncate flex-1">{item.goalkeeper.name}</span>
                               </div>
                             ))}
@@ -595,13 +595,13 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                         <div className="bg-white rounded p-3 border-l-4 border-red-600">
                           <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                            Team B Rotation
+                            Team B 
                           </h5>
                           <div className="space-y-1 max-h-32 overflow-y-auto">
                             {rotationSchedule.teamB.map((item, index) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
                                 <span className="font-medium text-red-600">#{item.segment}</span>
-                                <span>🥅</span>
+                                <span></span>
                                 <span className="text-[#333446] truncate flex-1">{item.goalkeeper.name}</span>
                               </div>
                             ))}
