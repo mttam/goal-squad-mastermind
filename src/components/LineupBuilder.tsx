@@ -702,25 +702,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                   </div>
                 )}
 
-                {/* Position Legend */}
-                <div className="flex items-center justify-center gap-4 pt-2 border-t border-[#B8CFCE]">
-                  <div className="flex items-center gap-1">
-                    <span>🥅</span>
-                    <span className="text-[#7F8CAA]">GK</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>🛡️</span>
-                    <span className="text-[#7F8CAA]">DEF</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>⚙️</span>
-                    <span className="text-[#7F8CAA]">MID</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span>⚔️</span>
-                    <span className="text-[#7F8CAA]">ATT</span>
-                  </div>
-                </div>
               </div>
             )}
           </div>
