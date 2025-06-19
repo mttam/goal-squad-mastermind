@@ -38,7 +38,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
   const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-  const fieldRef = useRef<HTMLDivElement>(null);  // Update when formation prop changes OR when formationData prop changes
+  const fieldRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (formationData) {
       // Use minimal formation data
@@ -58,7 +59,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
   // Recalculate positions when field becomes available or dimensions change
   useEffect(() => {
-    if (!fieldRef.current) return;    const recalculatePositions = () => {
+    if (!fieldRef.current) return;
+
+    const recalculatePositions = () => {
       if (players.length > 0) {
         if (formationData) {
           // Regenerate from minimal formation data
@@ -104,12 +107,16 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
       case '8vs8': return 8;
       default: return 5;
     }
-  };  const generateTeamPositions = (teamPlayers: Player[], team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
+  };
+
+  const generateTeamPositions = (teamPlayers: Player[], team: 'A' | 'B', mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
     // Get field dimensions from the actual div element, fallback to default values
     const fieldWidth = fieldRef.current?.clientWidth || 300;
     const fieldHeight = fieldRef.current?.clientHeight || 400;
-    const isTeamB = team === 'B';// Goalkeeper position (top for Team A, bottom for Team B)
+    const isTeamB = team === 'B';
+
+    // Goalkeeper position (top for Team A, bottom for Team B)
     const gkPlayer = teamPlayers.find(p => p.position === 'GK') || teamPlayers[0];
     positions.push({
       id: parseInt(gkPlayer.id),
@@ -118,7 +125,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
       isGK: true,
       team,
       originalPlayer: gkPlayer
-    });    // Outfield players - arrange them in a basic formation vertically
+    });
+
+    // Outfield players - arrange them in a basic formation vertically
     const outfieldPlayers = teamPlayers.filter(p => p.position !== 'GK');
     const playerCount = getPlayerCount(mode);
     const sectionsCount = Math.min(3, playerCount - 1); // Max 3 sections (DEF, MID, ATT)
@@ -149,7 +158,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     });
 
     return positions;
-  };  const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
+  };
+
+  const generateFormationPositions = (formationA: string, formationB: string, mode: MatchMode): FieldPlayer[] => {
     const positions: FieldPlayer[] = [];
     // Get field dimensions from the actual div element, fallback to default values
     const fieldWidth = fieldRef.current?.clientWidth || 300;
@@ -226,7 +237,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     });
 
     return positions;
-  };const handleFormationSelect = () => {
+  };
+
+  const handleFormationSelect = () => {
     if (!selectedFormationA || !selectedFormationB) return;
     
     const newPositions = generateFormationPositions(selectedFormationA, selectedFormationB, selectedMode);
@@ -239,6 +252,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     setSelectedFormationB('');
     setPlayers([]);
   };
+
   const handleMouseDown = (playerId: number) => {
     setDraggedPlayer(playerId);
   };
@@ -321,8 +335,21 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     return index + 1; // 1-based numbering
   };
 
+  // Get formation breakdown for display
+  const getFormationBreakdown = (formationCode: string): { defenders: number; midfielders: number; attackers: number } => {
+    if (!formationCode) return { defenders: 0, midfielders: 0, attackers: 0 };
+    
+    const parts = formationCode.split('-').map(Number);
+    return {
+      defenders: parts[0] || 0,
+      midfielders: parts[1] || 0,
+      attackers: parts[2] || 0
+    };
+  };
+
   return (
-    <Card className={`bg-white border-[#B8CFCE] ${className}`}>      <CardHeader>
+    <Card className={`bg-white border-[#B8CFCE] ${className}`}>
+      <CardHeader>
         <CardTitle className="text-[#333446]">
           Interactive Lineup Builder ⚽
           {formationData && (
@@ -357,7 +384,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
             {/* Formation Selection for Both Teams */}
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
                   <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
                   Team A Formation (Blue - Top Side)
                 </label>
@@ -375,7 +403,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                 </Select>
               </div>
 
-              <div className="space-y-2">                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
                   <div className="w-4 h-4 bg-red-600 rounded-full"></div>
                   Team B Formation (Red - Bottom Side)
                 </label>
@@ -392,7 +421,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                   </SelectContent>
                 </Select>
               </div>
-            </div>            {selectedFormationA && selectedFormationB && (
+            </div>
+
+            {selectedFormationA && selectedFormationB && (
               <Button 
                 onClick={handleFormationSelect}
                 className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full"
@@ -405,13 +436,16 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
         {/* Field */}
         {players.length > 0 && (
-          <div className="space-y-2">            <label className="text-sm font-medium text-[#333446]">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-[#333446]">
               {formationData 
                 ? `${formationData.teamA} vs ${formationData.teamB} (${formationData.mode})` 
                 : formation 
                   ? `${formation.name} - Formation View` 
                   : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
-            </label><div
+            </label>
+
+            <div
               ref={fieldRef}
               className="relative w-full h-96 bg-gradient-to-b from-green-400 to-green-500 border-4 border-[#333446] rounded-lg overflow-hidden cursor-crosshair"
               onMouseMove={handleMouseMove}
@@ -420,7 +454,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
               style={{ userSelect: 'none', touchAction: 'none' }}
-            >{/* Soccer field markings */}
+            >
+              {/* Soccer field markings */}
               <div className="absolute inset-0">
                 {/* Center line (horizontal) */}
                 <div className="absolute left-0 right-0 top-1/2 h-1 bg-white opacity-90 transform -translate-y-0.5"></div>
@@ -444,7 +479,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
               </div>
 
               {/* Players */}
-              {players.map((player) => (                <div
+              {players.map((player) => (
+                <div
                   key={player.id}
                   className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
                     player.isGK 
@@ -455,7 +491,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                     left: player.x, 
                     top: player.y,
                     touchAction: 'none'
-                  }}                  onMouseDown={() => handleMouseDown(player.id)}
+                  }}
+                  onMouseDown={() => handleMouseDown(player.id)}
                   onTouchStart={() => handleTouchStart(player.id)}
                   title={player.originalPlayer?.name || `Team ${player.team} - Player ${getPlayerDisplayNumber(player)}`}
                 >
@@ -463,7 +500,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                 </div>
               ))}
             </div>
-              <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
+
+            {/* Team Legend */}
+            <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-blue-600 rounded-full border-2 border-white"></div>
                 <span>Team A (Top)</span>
@@ -478,6 +517,78 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                 <span>Goalkeepers</span>
               </div>
             </div>
+
+            {/* Compact Formation Breakdown Legend */}
+            {(selectedFormationA || selectedFormationB || formationData) && (
+              <div className="bg-[#EAEFEF] rounded-lg p-3 space-y-2">
+                <h4 className="text-sm font-medium text-[#333446] text-center">Formation Breakdown</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {/* Team A Formation */}
+                  {(selectedFormationA || formationData?.teamA) && (
+                    <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-blue-600">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                        <span className="font-medium text-[#333446]">Team A ({selectedFormationA || formationData?.teamA})</span>
+                      </div>
+                      <div className="flex gap-2 text-[#7F8CAA]">
+                        {(() => {
+                          const breakdown = getFormationBreakdown(selectedFormationA || formationData?.teamA || '');
+                          return (
+                            <>
+                              <span title="Defenders">🛡️{breakdown.defenders}</span>
+                              <span title="Midfielders">⚙️{breakdown.midfielders}</span>
+                              <span title="Attackers">⚔️{breakdown.attackers}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Team B Formation */}
+                  {(selectedFormationB || formationData?.teamB) && (
+                    <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-red-600">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                        <span className="font-medium text-[#333446]">Team B ({selectedFormationB || formationData?.teamB})</span>
+                      </div>
+                      <div className="flex gap-2 text-[#7F8CAA]">
+                        {(() => {
+                          const breakdown = getFormationBreakdown(selectedFormationB || formationData?.teamB || '');
+                          return (
+                            <>
+                              <span title="Defenders">🛡️{breakdown.defenders}</span>
+                              <span title="Midfielders">⚙️{breakdown.midfielders}</span>
+                              <span title="Attackers">⚔️{breakdown.attackers}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Position Legend */}
+                <div className="flex items-center justify-center gap-4 pt-1 border-t border-[#B8CFCE]">
+                  <div className="flex items-center gap-1">
+                    <span>🥅</span>
+                    <span className="text-[#7F8CAA]">GK</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>🛡️</span>
+                    <span className="text-[#7F8CAA]">DEF</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>⚙️</span>
+                    <span className="text-[#7F8CAA]">MID</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span>⚔️</span>
+                    <span className="text-[#7F8CAA]">ATT</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
