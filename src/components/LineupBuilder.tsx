@@ -335,6 +335,23 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     return index + 1; // 1-based numbering
   };
 
+  // Get team roster with numbers and names
+  const getTeamRoster = (team: 'A' | 'B'): { number: number; name: string; isGK: boolean }[] => {
+    const teamPlayers = players.filter(p => p.team === team);
+    const sortedTeamPlayers = teamPlayers.sort((a, b) => {
+      // GK first, then by original ID order
+      if (a.isGK && !b.isGK) return -1;
+      if (!a.isGK && b.isGK) return 1;
+      return a.id - b.id;
+    });
+    
+    return sortedTeamPlayers.map((player, index) => ({
+      number: index + 1,
+      name: player.originalPlayer?.name || `Player ${index + 1}`,
+      isGK: player.isGK || false
+    }));
+  };
+
   // Get formation breakdown for display
   const getFormationBreakdown = (formationCode: string): { defenders: number; midfielders: number; attackers: number } => {
     if (!formationCode) return { defenders: 0, midfielders: 0, attackers: 0 };
@@ -520,7 +537,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
             {/* Compact Formation Breakdown Legend */}
             {(selectedFormationA || selectedFormationB || formationData) && (
-              <div className="bg-[#EAEFEF] rounded-lg p-3 space-y-2">
+              <div className="bg-[#EAEFEF] rounded-lg p-3 space-y-3">
                 <h4 className="text-sm font-medium text-[#333446] text-center">Formation Breakdown</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   {/* Team A Formation */}
@@ -568,8 +585,49 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                   )}
                 </div>
 
+                {/* Team Rosters */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {/* Team A Roster */}
+                  <div className="bg-white rounded p-3 border-l-4 border-blue-600">
+                    <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
+                      <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                      Team A Roster
+                    </h5>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {getTeamRoster('A').map((player) => (
+                        <div key={`A-${player.number}`} className="flex items-center gap-2 text-xs">
+                          <span className={`font-medium ${player.isGK ? 'text-blue-800' : 'text-blue-600'}`}>
+                            {player.number}
+                          </span>
+                          <span className="text-[#333446] truncate flex-1">{player.name}</span>
+                          {player.isGK && <span className="text-blue-800">🥅</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Team B Roster */}
+                  <div className="bg-white rounded p-3 border-l-4 border-red-600">
+                    <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
+                      <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                      Team B Roster
+                    </h5>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {getTeamRoster('B').map((player) => (
+                        <div key={`B-${player.number}`} className="flex items-center gap-2 text-xs">
+                          <span className={`font-medium ${player.isGK ? 'text-red-800' : 'text-red-600'}`}>
+                            {player.number}
+                          </span>
+                          <span className="text-[#333446] truncate flex-1">{player.name}</span>
+                          {player.isGK && <span className="text-red-800">🥅</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Position Legend */}
-                <div className="flex items-center justify-center gap-4 pt-1 border-t border-[#B8CFCE]">
+                <div className="flex items-center justify-center gap-4 pt-2 border-t border-[#B8CFCE]">
                   <div className="flex items-center gap-1">
                     <span>🥅</span>
                     <span className="text-[#7F8CAA]">GK</span>
