@@ -849,11 +849,12 @@ const MatchTools = () => {
             </Card>
           </div>
         </div>
-      )}
-
-      {/* Interactive Lineup Builder - Using minimal formation data */}
+      )}      {/* Interactive Lineup Builder - Using minimal formation data */}
       {generatedDataForLineup ? (
-        <LineupBuilder formationData={generatedDataForLineup} />
+        <LineupBuilder 
+          formationData={generatedDataForLineup} 
+          rotationSchedule={rotationSchedule}
+        />
       ) : (
         <Card className="bg-white border-[#B8CFCE]">
           <CardHeader>
