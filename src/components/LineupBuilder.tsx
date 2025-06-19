@@ -345,11 +345,38 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
       return a.id - b.id;
     });
     
-    return sortedTeamPlayers.map((player, index) => ({
-      number: index + 1,
-      name: player.originalPlayer?.name || `Player ${index + 1}`,
-      isGK: player.isGK || false
-    }));
+    return sortedTeamPlayers.map((player, index) => {
+      let playerName = `Player ${index + 1}`;
+      
+      // Use rotation data if formation is provided
+      if (formation) {
+        const rotationKey = team === 'A' ? 'rotationsA' : 'rotationsB';
+        const rotations = formation[rotationKey];
+        
+        if (rotations && rotations.length > 0) {
+          // Find player in current rotation (assuming first rotation for display)
+          const currentRotation = rotations[0];
+          if (currentRotation && currentRotation.players && currentRotation.players[index]) {
+            playerName = currentRotation.players[index].name;
+          }
+        } else {
+          // Fallback to teamA/teamB player data
+          const teamData = team === 'A' ? formation.teamA : formation.teamB;
+          if (teamData && teamData[index]) {
+            playerName = teamData[index].name;
+          }
+        }
+      } else if (player.originalPlayer) {
+        // Use original player data if available
+        playerName = player.originalPlayer.name;
+      }
+      
+      return {
+        number: index + 1,
+        name: playerName,
+        isGK: player.isGK || false
+      };
+    });
   };
 
   // Get formation breakdown for display
