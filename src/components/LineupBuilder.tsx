@@ -577,8 +577,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                           <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
                             <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                             Team A 
-                          </h5>
-                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                          </h5>                          <div className="space-y-1">
                             {rotationSchedule.teamA.map((item, index) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
                                 <span className="font-medium text-blue-600">#{item.segment}</span>
@@ -596,8 +595,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                           <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-600 rounded-full"></div>
                             Team B 
-                          </h5>
-                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                          </h5>                          <div className="space-y-1">
                             {rotationSchedule.teamB.map((item, index) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
                                 <span className="font-medium text-red-600">#{item.segment}</span>
