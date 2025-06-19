@@ -14,9 +14,11 @@ const MatchTools = () => {
   const { players, squads, formations, dues, addFormation, addDue, updateDue, setDues } = useFantacalcietto();
   const { toast } = useToast();
 
-  const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');  const [selectedSquadA, setSelectedSquadA] = useState('');
+  const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
+  const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
-  const [selectedFormationA, setSelectedFormationA] = useState('');  const [selectedFormationB, setSelectedFormationB] = useState('');
+  const [selectedFormationA, setSelectedFormationA] = useState('');
+  const [selectedFormationB, setSelectedFormationB] = useState('');
   const [generatedFormation, setGeneratedFormation] = useState<Formation | null>(null);
   const [generatedDataForLineup, setGeneratedDataForLineup] = useState<{mode: MatchMode, teamA: string, teamB: string} | null>(null);
   const [rotationMode, setRotationMode] = useState<MatchMode>('5vs5');
@@ -27,7 +29,8 @@ const MatchTools = () => {
     amount: 0,
     description: '',
     actualPaid: 0,
-    change: 0  });
+    change: 0
+  });
 
   // Formation options for each match mode
   const formationOptions = {
@@ -111,6 +114,7 @@ const MatchTools = () => {
     { value: '7vs7', label: '7 vs 7', icon: '⚽' },
     { value: '8vs8', label: '8 vs 8', icon: '⚽' },
   ];
+
   const getPositionEmoji = (position: string) => {
     switch (position) {
       case 'GK': return '🥅';
@@ -131,6 +135,7 @@ const MatchTools = () => {
     
     return `${formation} (${description})`;
   };
+
   const handleGenerateFormation = () => {
     if (!selectedSquadA || !selectedSquadB) {
       toast({
@@ -160,7 +165,9 @@ const MatchTools = () => {
         variant: "destructive",
       });
       return;
-    }    const formation: Formation = {
+    }
+
+    const formation: Formation = {
       id: `formation-${Date.now()}`,
       name: `${squadA.name} (${selectedFormationA}) vs ${squadB.name} (${selectedFormationB})`,
       mode: selectedMode,
@@ -181,10 +188,12 @@ const MatchTools = () => {
     addFormation(formation);
 
     // Auto-sync rotation mode with formation mode
-    setRotationMode(selectedMode);    // Debug: Log both formation structures
+    setRotationMode(selectedMode);
+
+    // Debug: Log both formation structures
     console.log('🔍 Generated Formation (Full):', formation);
-    console.log('� Generated Data for LineupBuilder:', generatedDataForLineup);
-    console.log('� Formation Details:', {
+    console.log('🔍 Generated Data for LineupBuilder:', generatedDataForLineup);
+    console.log('🔍 Formation Details:', {
       id: formation.id,
       name: formation.name,
       mode: formation.mode,
@@ -205,7 +214,9 @@ const MatchTools = () => {
     } else {
       setSelectedGoalkeepers(prev => prev.filter(id => id !== playerId));
     }
-  };  const handleGenerateRotation = () => {
+  };
+
+  const handleGenerateRotation = () => {
     let teamAPlayers: Player[] = [];
     let teamBPlayers: Player[] = [];
 
@@ -254,7 +265,9 @@ const MatchTools = () => {
         variant: "destructive",
       });
       return;
-    }    const segmentsPerTeam = {
+    }
+
+    const segmentsPerTeam = {
       '5vs5': 5,
       '6vs6': 6,
       '7vs7': 7,
@@ -305,7 +318,9 @@ const MatchTools = () => {
 
     const rotationSource = generatedFormation 
       ? `formation "${generatedFormation.name}"`
-      : "available players";    toast({
+      : "available players";
+
+    toast({
       title: "Random Rotation Generated! 🔄",
       description: hasFixedGoalkeepers 
         ? `Random goalkeeper rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode using ${rotationSource}`
@@ -348,6 +363,7 @@ const MatchTools = () => {
       description: `Added due for ${due.playerName}`,
     });
   };
+
   const handleLoadPlayersFromFormation = () => {
     if (!generatedFormation) {
       toast({
@@ -392,7 +408,9 @@ const MatchTools = () => {
         addDue(due);
         addedCount++;
       }
-    });    if (addedCount > 0) {
+    });
+
+    if (addedCount > 0) {
       toast({
         title: "Players Loaded! 💰",
         description: `Added ${addedCount} player dues from formation (€${newDue.amount} each). Players with existing dues were skipped.`,
@@ -441,6 +459,7 @@ const MatchTools = () => {
       description: "Due entry has been modified",
     });
   };
+
   const handleUpdateDueField = (dueId: string, field: string, value: string | number) => {
     const updatedDues = dues.map(due => {
       if (due.id === dueId) {
@@ -481,7 +500,6 @@ const MatchTools = () => {
         <p className="text-[#7F8CAA]">Manage formations, goalkeeper rotations, and player dues</p>
       </div>
 
-      
       {/* Formation Generator */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
@@ -504,7 +522,9 @@ const MatchTools = () => {
                 <span className="text-sm font-medium">{mode.label}</span>
               </Button>
             ))}
-          </div>          <div className="grid md:grid-cols-2 gap-4">
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Team A</Label>
               <Select value={selectedSquadA} onValueChange={setSelectedSquadA}>
@@ -570,7 +590,9 @@ const MatchTools = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>          <Button 
+          </div>
+
+          <Button 
             onClick={handleGenerateFormation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
             disabled={!selectedSquadA || !selectedSquadB || !selectedFormationA || !selectedFormationB}
@@ -582,7 +604,8 @@ const MatchTools = () => {
 
       {/* Generated Formation display section */}
       {generatedFormation && (
-        <div className="grid md:grid-cols-2 gap-6">          <Card className="bg-white border-[#B8CFCE]">
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="bg-white border-[#B8CFCE]">
             <CardHeader>
               <CardTitle className="text-[#333446]">
                 🔴 {generatedFormation.teamA[0]?.name.split(' ')[0] || 'Team A'}
@@ -607,7 +630,9 @@ const MatchTools = () => {
                 ))}
               </div>
             </CardContent>
-          </Card>          <Card className="bg-white border-[#B8CFCE]">
+          </Card>
+
+          <Card className="bg-white border-[#B8CFCE]">
             <CardHeader>
               <CardTitle className="text-[#333446]">
                 🔵 {generatedFormation.teamB[0]?.name.split(' ')[0] || 'Team B'}
@@ -634,7 +659,9 @@ const MatchTools = () => {
             </CardContent>
           </Card>
         </div>
-      )}      {/* Goalkeeper Rotation Generator section */}
+      )}
+
+      {/* Goalkeeper Rotation Generator section */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
           <CardTitle className="text-[#333446]">Goalkeeper Rotation Generator 🔄</CardTitle>
@@ -687,7 +714,9 @@ const MatchTools = () => {
                 </div>
               </div>
             </div>
-          )}          <div className="space-y-2">
+          )}
+
+          <div className="space-y-2">
             <Label>
               {(generatedFormation 
                 ? [...generatedFormation.teamA, ...generatedFormation.teamB].filter(p => p.position === 'GK').length 
@@ -732,7 +761,9 @@ const MatchTools = () => {
                   })}
               </div>
             )}
-          </div>          <Button 
+          </div>
+
+          <Button 
             onClick={handleGenerateRotation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
             disabled={(generatedFormation 
@@ -754,7 +785,9 @@ const MatchTools = () => {
             )}
           </Button>
         </CardContent>
-      </Card>      {/* Rotation Schedule display */}
+      </Card>
+
+      {/* Rotation Schedule display */}
       {rotationSchedule && (
         <div className="space-y-4">
           {generatedFormation && (
@@ -773,7 +806,8 @@ const MatchTools = () => {
                     <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationA})</span>
                   )}
                 </CardTitle>
-              </CardHeader>              <CardContent>
+              </CardHeader>
+              <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {rotationSchedule.teamA.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF] text-sm">
@@ -797,7 +831,8 @@ const MatchTools = () => {
                     <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationB})</span>
                   )}
                 </CardTitle>
-              </CardHeader>              <CardContent>
+              </CardHeader>
+              <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {rotationSchedule.teamB.map((item, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF] text-sm">
@@ -814,7 +849,9 @@ const MatchTools = () => {
             </Card>
           </div>
         </div>
-      )}        {/* Interactive Lineup Builder - Using minimal formation data */}
+      )}
+
+      {/* Interactive Lineup Builder - Using minimal formation data */}
       {generatedDataForLineup ? (
         <LineupBuilder formationData={generatedDataForLineup} />
       ) : (
@@ -830,58 +867,68 @@ const MatchTools = () => {
                 Use the Formation Generator above to create a formation and see the interactive lineup
               </p>
             </div>
-          </CardContent>        </Card>
+          </CardContent>
+        </Card>
       )}
-       
-      
-      {/* Dues Management section with all the existing logic and UI */}
+
+      {/* Dues Management section - Mobile optimized */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
           <CardTitle className="text-[#333446]">Dues Management 💰</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label>Player Name</Label>
-              <Input
-                value={newDue.playerName}
-                onChange={(e) => setNewDue({...newDue, playerName: e.target.value})}
-                placeholder="Enter player name"
-              />
-            </div>            <div className="space-y-2">
-              <Label>Amount (€)</Label>
-              <Input
-                type="number"
-                value={newDue.amount}
-                onChange={(e) => {
-                  const amount = Number(e.target.value);
-                  const change = newDue.actualPaid - amount;
-                  setNewDue({...newDue, amount, change});
-                }}
-                placeholder="0"
-              />
-            </div><div className="space-y-2">
-              <Label>Actual Paid (€)</Label>
-              <Input
-                type="number"
-                value={newDue.actualPaid}
-                onChange={(e) => {
-                  const actualPaid = Number(e.target.value);
-                  const change = actualPaid - newDue.amount;
-                  setNewDue({...newDue, actualPaid, change});
-                }}
-                placeholder="0"
-              />
-            </div>            <div className="space-y-2">
-              <Label>Change (€)</Label>
-              <Input
-                type="number"
-                value={newDue.change}
-                readOnly
-                className="bg-gray-100"
-                placeholder="Auto calculated"
-              />
+          {/* Mobile-first form layout */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Player Name</Label>
+                <Input
+                  value={newDue.playerName}
+                  onChange={(e) => setNewDue({...newDue, playerName: e.target.value})}
+                  placeholder="Enter player name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Amount (€)</Label>
+                <Input
+                  type="number"
+                  value={newDue.amount || ''}
+                  onChange={(e) => {
+                    const amount = Number(e.target.value) || 0;
+                    const change = newDue.actualPaid - amount;
+                    setNewDue({...newDue, amount, change});
+                  }}
+                  placeholder="Enter amount"
+                />
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Actual Paid (€)</Label>
+                <Input
+                  type="number"
+                  value={newDue.actualPaid || ''}
+                  onChange={(e) => {
+                    const actualPaid = Number(e.target.value) || 0;
+                    const change = actualPaid - newDue.amount;
+                    setNewDue({...newDue, actualPaid, change});
+                  }}
+                  placeholder="Enter actual amount paid"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Change (€)</Label>
+                <Input
+                  type="number"
+                  value={newDue.change || ''}
+                  readOnly
+                  className="bg-gray-100"
+                  placeholder="Auto calculated"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Description</Label>
               <Input
@@ -892,31 +939,34 @@ const MatchTools = () => {
             </div>
           </div>
 
-          <Button 
-            onClick={handleAddDue}
-            className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
-          >
-            Add Due 💰
-          </Button>          <Button 
-            onClick={handleLoadPlayersFromFormation}
-            className="bg-[#4CAF50] text-white hover:bg-[#66BB6A] disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={!generatedFormation || !newDue.amount || newDue.amount <= 0}
-            title={
-              !generatedFormation 
-                ? "Generate a formation first" 
-                : (!newDue.amount || newDue.amount <= 0)
-                  ? "Enter an amount first"
-                  : "Load all players from the current formation"
-            }
-          >
-            Load All Players from Formation 👥
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              onClick={handleAddDue}
+              className="bg-[#333446] text-white hover:bg-[#7F8CAA] flex-1"
+            >
+              Add Due 💰
+            </Button>
+            <Button 
+              onClick={handleLoadPlayersFromFormation}
+              className="bg-[#4CAF50] text-white hover:bg-[#66BB6A] disabled:bg-gray-400 disabled:cursor-not-allowed flex-1"
+              disabled={!generatedFormation || !newDue.amount || newDue.amount <= 0}
+              title={
+                !generatedFormation 
+                  ? "Generate a formation first" 
+                  : (!newDue.amount || newDue.amount <= 0)
+                    ? "Enter an amount first"
+                    : "Load all players from the current formation"
+              }
+            >
+              Load All Players from Formation 👥
+            </Button>
+          </div>
 
           {dues.length > 0 && (
             <div className="space-y-4">
               <div className="bg-[#EAEFEF] p-4 rounded-lg">
                 <h3 className="font-medium text-[#333446] mb-2">Financial Summary</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                   <div>
                     <span className="text-[#7F8CAA]">Total Dues:</span>
                     <div className="font-bold text-[#333446]">€{financialSummary.totalDues}</div>
@@ -936,73 +986,74 @@ const MatchTools = () => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-[#B8CFCE]">
-                      <th className="text-left p-2 text-[#333446]">Player</th>
-                      <th className="text-left p-2 text-[#333446]">Amount</th>
-                      <th className="text-left p-2 text-[#333446]">Actual Paid</th>
-                      <th className="text-left p-2 text-[#333446]">Change</th>
-                      <th className="text-left p-2 text-[#333446]">Description</th>
-                      <th className="text-left p-2 text-[#333446]">Status</th>
-                      <th className="text-left p-2 text-[#333446]">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>                    {dues.map((due) => (
-                      <tr key={due.id} className="border-b border-[#EAEFEF]">
-                        <td className="p-2 font-medium text-[#333446]">{due.playerName}</td>
-                        <td className="p-2 text-[#333446]">€{due.amount}</td>
-                        <td className="p-2">
-                          <Input
-                            type="number"
-                            value={due.actualPaid || 0}
-                            onChange={(e) => handleUpdateDueField(due.id, 'actualPaid', Number(e.target.value))}
-                            className="w-20 h-8 text-sm"
-                            placeholder="0"
-                          />
-                        </td>
-                        <td className="p-2 text-[#333446]">€{due.change || 0}</td>
-                        <td className="p-2">
-                          <Input
-                            value={due.description || ''}
-                            onChange={(e) => handleUpdateDueField(due.id, 'description', e.target.value)}
-                            className="w-32 h-8 text-sm"
-                            placeholder="Description"
-                          />
-                        </td>
-                        <td className="p-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            due.paid 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {due.paid ? '✅ Paid' : '❌ Unpaid'}
-                          </span>
-                        </td>                        <td className="p-2">
-                          <div className="flex gap-1">
-                            {!due.paid && (
-                              <Button
-                                size="sm"
-                                onClick={() => handlePayDue(due.id)}
-                                className="bg-green-600 text-white hover:bg-green-700 text-xs"
-                              >
-                                Mark Paid
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              onClick={() => handleDeleteDue(due.id)}
-                              className="bg-red-600 text-white hover:bg-red-700 text-xs"
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Mobile-optimized dues list */}
+              <div className="space-y-3">
+                {dues.map((due) => (
+                  <div key={due.id} className="bg-[#EAEFEF] p-4 rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium text-[#333446]">{due.playerName}</div>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        due.paid 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {due.paid ? '✅ Paid' : '❌ Unpaid'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-[#7F8CAA] block">Amount:</span>
+                        <span className="font-medium text-[#333446]">€{due.amount}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#7F8CAA] block">Change:</span>
+                        <span className="font-medium text-[#333446]">€{due.change || 0}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div>
+                        <Label className="text-xs text-[#7F8CAA]">Actual Paid (€)</Label>
+                        <Input
+                          type="number"
+                          value={due.actualPaid || ''}
+                          onChange={(e) => handleUpdateDueField(due.id, 'actualPaid', Number(e.target.value) || 0)}
+                          className="h-8 text-sm"
+                          placeholder="Enter amount"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-[#7F8CAA]">Description</Label>
+                        <Input
+                          value={due.description || ''}
+                          onChange={(e) => handleUpdateDueField(due.id, 'description', e.target.value)}
+                          className="h-8 text-sm"
+                          placeholder="Description"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      {!due.paid && (
+                        <Button
+                          size="sm"
+                          onClick={() => handlePayDue(due.id)}
+                          className="bg-green-600 text-white hover:bg-green-700 text-xs flex-1"
+                        >
+                          Mark Paid
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => handleDeleteDue(due.id)}
+                        className="bg-red-600 text-white hover:bg-red-700 text-xs flex-1"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
