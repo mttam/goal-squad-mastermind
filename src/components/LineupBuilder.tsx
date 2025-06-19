@@ -14,6 +14,7 @@ interface LineupBuilderProps {
   className?: string;
   formation?: Formation | null; // Keep for backward compatibility
   formationData?: MinimalFormationData | null; // New minimal data prop
+  rotationSchedule?: {teamA: {segment: number, goalkeeper: Player}[], teamB: {segment: number, goalkeeper: Player}[]} | null; // Add rotation schedule prop
 }
 
 interface FieldPlayer {
@@ -25,7 +26,7 @@ interface FieldPlayer {
   originalPlayer?: Player;
 }
 
-const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, formationData }) => {
+const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, formationData, rotationSchedule }) => {
   const formations = {
     '5vs5': ['3-1', '2-2', '1-3', '2-1-1', '1-2-1', '1-1-2'],
     '6vs6': ['4-1', '3-2', '2-3', '1-4', '3-1-1', '2-2-1', '2-1-2', '1-3-1', '1-2-2', '1-1-3'],
@@ -562,96 +563,146 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
               </div>
             </div>
 
-            {/* Compact Formation Breakdown Legend */}
-            {(selectedFormationA || selectedFormationB || formationData) && (
+            {/* Compact Rotation Schedule and Formation Legend */}
+            {(selectedFormationA || selectedFormationB || formationData || rotationSchedule) && (
               <div className="bg-[#EAEFEF] rounded-lg p-3 space-y-3">
-                <h4 className="text-sm font-medium text-[#333446] text-center">Formation Breakdown</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  {/* Team A Formation */}
-                  {(selectedFormationA || formationData?.teamA) && (
-                    <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-blue-600">
-                      <div className="flex items-center gap-2">
+                {/* Show rotation schedule if available, otherwise show formation breakdown */}
+                {rotationSchedule ? (
+                  <>
+                    <h4 className="text-sm font-medium text-[#333446] text-center">Team Rotation Schedule</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      {/* Team A Rotation */}
+                      {rotationSchedule.teamA.length > 0 && (
+                        <div className="bg-white rounded p-3 border-l-4 border-blue-600">
+                          <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            Team A Rotation
+                          </h5>
+                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                            {rotationSchedule.teamA.map((item, index) => (
+                              <div key={index} className="flex items-center gap-2 text-xs">
+                                <span className="font-medium text-blue-600">#{item.segment}</span>
+                                <span>🥅</span>
+                                <span className="text-[#333446] truncate flex-1">{item.goalkeeper.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Team B Rotation */}
+                      {rotationSchedule.teamB.length > 0 && (
+                        <div className="bg-white rounded p-3 border-l-4 border-red-600">
+                          <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
+                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                            Team B Rotation
+                          </h5>
+                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                            {rotationSchedule.teamB.map((item, index) => (
+                              <div key={index} className="flex items-center gap-2 text-xs">
+                                <span className="font-medium text-red-600">#{item.segment}</span>
+                                <span>🥅</span>
+                                <span className="text-[#333446] truncate flex-1">{item.goalkeeper.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h4 className="text-sm font-medium text-[#333446] text-center">Formation Breakdown</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      {/* Team A Formation */}
+                      {(selectedFormationA || formationData?.teamA) && (
+                        <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-blue-600">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            <span className="font-medium text-[#333446]">Team A ({selectedFormationA || formationData?.teamA})</span>
+                          </div>
+                          <div className="flex gap-2 text-[#7F8CAA]">
+                            {(() => {
+                              const breakdown = getFormationBreakdown(selectedFormationA || formationData?.teamA || '');
+                              return (
+                                <>
+                                  <span title="Defenders">🛡️{breakdown.defenders}</span>
+                                  <span title="Midfielders">⚙️{breakdown.midfielders}</span>
+                                  <span title="Attackers">⚔️{breakdown.attackers}</span>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Team B Formation */}
+                      {(selectedFormationB || formationData?.teamB) && (
+                        <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-red-600">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                            <span className="font-medium text-[#333446]">Team B ({selectedFormationB || formationData?.teamB})</span>
+                          </div>
+                          <div className="flex gap-2 text-[#7F8CAA]">
+                            {(() => {
+                              const breakdown = getFormationBreakdown(selectedFormationB || formationData?.teamB || '');
+                              return (
+                                <>
+                                  <span title="Defenders">🛡️{breakdown.defenders}</span>
+                                  <span title="Midfielders">⚙️{breakdown.midfielders}</span>
+                                  <span title="Attackers">⚔️{breakdown.attackers}</span>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Team Rosters - only show when no rotation schedule */}
+                {!rotationSchedule && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    {/* Team A Roster */}
+                    <div className="bg-white rounded p-3 border-l-4 border-blue-600">
+                      <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
                         <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                        <span className="font-medium text-[#333446]">Team A ({selectedFormationA || formationData?.teamA})</span>
-                      </div>
-                      <div className="flex gap-2 text-[#7F8CAA]">
-                        {(() => {
-                          const breakdown = getFormationBreakdown(selectedFormationA || formationData?.teamA || '');
-                          return (
-                            <>
-                              <span title="Defenders">🛡️{breakdown.defenders}</span>
-                              <span title="Midfielders">⚙️{breakdown.midfielders}</span>
-                              <span title="Attackers">⚔️{breakdown.attackers}</span>
-                            </>
-                          );
-                        })()}
+                        Team A Roster
+                      </h5>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {getTeamRoster('A').map((player) => (
+                          <div key={`A-${player.number}`} className="flex items-center gap-2 text-xs">
+                            <span className={`font-medium ${player.isGK ? 'text-blue-800' : 'text-blue-600'}`}>
+                              {player.number}
+                            </span>
+                            <span className="text-[#333446] truncate flex-1">{player.name}</span>
+                            {player.isGK && <span className="text-blue-800">🥅</span>}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* Team B Formation */}
-                  {(selectedFormationB || formationData?.teamB) && (
-                    <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-red-600">
-                      <div className="flex items-center gap-2">
+                    {/* Team B Roster */}
+                    <div className="bg-white rounded p-3 border-l-4 border-red-600">
+                      <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
                         <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                        <span className="font-medium text-[#333446]">Team B ({selectedFormationB || formationData?.teamB})</span>
+                        Team B Roster
+                      </h5>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {getTeamRoster('B').map((player) => (
+                          <div key={`B-${player.number}`} className="flex items-center gap-2 text-xs">
+                            <span className={`font-medium ${player.isGK ? 'text-red-800' : 'text-red-600'}`}>
+                              {player.number}
+                            </span>
+                            <span className="text-[#333446] truncate flex-1">{player.name}</span>
+                            {player.isGK && <span className="text-red-800">🥅</span>}
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex gap-2 text-[#7F8CAA]">
-                        {(() => {
-                          const breakdown = getFormationBreakdown(selectedFormationB || formationData?.teamB || '');
-                          return (
-                            <>
-                              <span title="Defenders">🛡️{breakdown.defenders}</span>
-                              <span title="Midfielders">⚙️{breakdown.midfielders}</span>
-                              <span title="Attackers">⚔️{breakdown.attackers}</span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Team Rosters */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                  {/* Team A Roster */}
-                  <div className="bg-white rounded p-3 border-l-4 border-blue-600">
-                    <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
-                      <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                      Team A Roster
-                    </h5>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {getTeamRoster('A').map((player) => (
-                        <div key={`A-${player.number}`} className="flex items-center gap-2 text-xs">
-                          <span className={`font-medium ${player.isGK ? 'text-blue-800' : 'text-blue-600'}`}>
-                            {player.number}
-                          </span>
-                          <span className="text-[#333446] truncate flex-1">{player.name}</span>
-                          {player.isGK && <span className="text-blue-800">🥅</span>}
-                        </div>
-                      ))}
                     </div>
                   </div>
-
-                  {/* Team B Roster */}
-                  <div className="bg-white rounded p-3 border-l-4 border-red-600">
-                    <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-600 rounded-full"></div>
-                      Team B Roster
-                    </h5>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {getTeamRoster('B').map((player) => (
-                        <div key={`B-${player.number}`} className="flex items-center gap-2 text-xs">
-                          <span className={`font-medium ${player.isGK ? 'text-red-800' : 'text-red-600'}`}>
-                            {player.number}
-                          </span>
-                          <span className="text-[#333446] truncate flex-1">{player.name}</span>
-                          {player.isGK && <span className="text-red-800">🥅</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Position Legend */}
                 <div className="flex items-center justify-center gap-4 pt-2 border-t border-[#B8CFCE]">
