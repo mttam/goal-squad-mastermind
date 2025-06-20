@@ -173,19 +173,19 @@ const DataExtractor = () => {
         </div>        {/* Manual Data Editing */}
         {isEditing && extractedPlayers.length > 0 && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="font-medium text-[#333446]">Edit Player Statistics</h3>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   onClick={downloadCSV}
                   variant="outline"
-                  className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]"
+                  className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF] w-full sm:w-auto"
                 >
                   Download CSV 📄
                 </Button>
                 <Button 
                   onClick={saveToDatabase}
-                  className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
+                  className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full sm:w-auto"
                 >
                   Save to Database 💾
                 </Button>
@@ -199,7 +199,9 @@ const DataExtractor = () => {
                   <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
                   Team A Players ({extractedPlayers.filter(p => p.squad === 'Team A').length})
                 </h4>
-                <div className="border border-[#B8CFCE] rounded-lg overflow-hidden">
+                
+                {/* Desktop Table */}
+                <div className="hidden md:block border border-[#B8CFCE] rounded-lg overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -264,6 +266,65 @@ const DataExtractor = () => {
                     </TableBody>
                   </Table>
                 </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-3">
+                  {extractedPlayers.filter(p => p.squad === 'Team A').map((player) => (
+                    <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xl">{getPositionEmoji(player.position)}</span>
+                        <div>
+                          <div className="font-medium text-[#333446]">{player.name}</div>
+                          <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Goals</Label>
+                          <Input
+                            type="number"
+                            value={player.goals}
+                            onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Assists</Label>
+                          <Input
+                            type="number"
+                            value={player.assists}
+                            onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Saves</Label>
+                          <Input
+                            type="number"
+                            value={player.saves}
+                            onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Voting</Label>
+                          <Input
+                            type="number"
+                            value={player.defenderVoting}
+                            onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="1"
+                            max="10"
+                            step="0.1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -274,7 +335,9 @@ const DataExtractor = () => {
                   <div className="w-4 h-4 bg-red-600 rounded-full"></div>
                   Team B Players ({extractedPlayers.filter(p => p.squad === 'Team B').length})
                 </h4>
-                <div className="border border-[#B8CFCE] rounded-lg overflow-hidden">
+                
+                {/* Desktop Table */}
+                <div className="hidden md:block border border-[#B8CFCE] rounded-lg overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -339,12 +402,69 @@ const DataExtractor = () => {
                     </TableBody>
                   </Table>
                 </div>
-              </div>
-            )}
 
-            <div className="bg-[#EAEFEF] p-3 rounded-lg">
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-3">
+                  {extractedPlayers.filter(p => p.squad === 'Team B').map((player) => (
+                    <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xl">{getPositionEmoji(player.position)}</span>
+                        <div>
+                          <div className="font-medium text-[#333446]">{player.name}</div>
+                          <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Goals</Label>
+                          <Input
+                            type="number"
+                            value={player.goals}
+                            onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Assists</Label>
+                          <Input
+                            type="number"
+                            value={player.assists}
+                            onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Saves</Label>
+                          <Input
+                            type="number"
+                            value={player.saves}
+                            onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-[#7F8CAA]">Voting</Label>
+                          <Input
+                            type="number"
+                            value={player.defenderVoting}
+                            onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
+                            className="h-8 text-center mt-1"
+                            min="1"
+                            max="10"
+                            step="0.1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}            <div className="bg-[#EAEFEF] p-3 rounded-lg">
               <h4 className="font-medium text-[#333446] mb-2">Quick Stats Summary:</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
                 <div className="text-center">
                   <div className="font-bold text-[#333446]">{extractedPlayers.length}</div>
                   <div className="text-[#7F8CAA]">Total Players</div>
@@ -370,13 +490,13 @@ const DataExtractor = () => {
               </div>
               
               {/* Team-specific stats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="bg-white p-3 rounded border-l-4 border-blue-600">
                   <h5 className="font-medium text-[#333446] mb-2 flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                     Team A Stats
                   </h5>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 text-xs">
                     <div className="text-center">
                       <div className="font-bold text-blue-600">
                         {extractedPlayers.filter(p => p.squad === 'Team A').reduce((sum, p) => sum + p.goals, 0)}
@@ -389,6 +509,18 @@ const DataExtractor = () => {
                       </div>
                       <div className="text-[#7F8CAA]">Assists</div>
                     </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team A').reduce((sum, p) => sum + p.saves, 0)}
+                      </div>
+                      <div className="text-[#7F8CAA]">Saves</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team A').length}
+                      </div>
+                      <div className="text-[#7F8CAA]">Players</div>
+                    </div>
                   </div>
                 </div>
                 
@@ -397,7 +529,7 @@ const DataExtractor = () => {
                     <div className="w-3 h-3 bg-red-600 rounded-full"></div>
                     Team B Stats
                   </h5>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 text-xs">
                     <div className="text-center">
                       <div className="font-bold text-red-600">
                         {extractedPlayers.filter(p => p.squad === 'Team B').reduce((sum, p) => sum + p.goals, 0)}
@@ -409,6 +541,18 @@ const DataExtractor = () => {
                         {extractedPlayers.filter(p => p.squad === 'Team B').reduce((sum, p) => sum + p.assists, 0)}
                       </div>
                       <div className="text-[#7F8CAA]">Assists</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-red-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team B').reduce((sum, p) => sum + p.saves, 0)}
+                      </div>
+                      <div className="text-[#7F8CAA]">Saves</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-red-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team B').length}
+                      </div>
+                      <div className="text-[#7F8CAA]">Players</div>
                     </div>
                   </div>
                 </div>
