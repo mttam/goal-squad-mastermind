@@ -16,22 +16,31 @@ const DataExtractor = () => {
   const [selectedFormationId, setSelectedFormationId] = useState<string>('');
   const [extractedPlayers, setExtractedPlayers] = useState<Player[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-
   const handleFormationSelect = (formationId: string) => {
     setSelectedFormationId(formationId);
     const formation = formations.find(f => f.id === formationId);
     
     if (formation) {
-      const allPlayers = [...formation.teamA, ...formation.teamB];
-      const playersWithStats = allPlayers.map(player => ({
+      const teamAPlayers = formation.teamA.map(player => ({
         ...player,
         goals: player.goals || 0,
         assists: player.assists || 0,
         saves: player.saves || 0,
         defenderVoting: player.defenderVoting || 1,
+        squad: 'Team A'
       }));
       
-      setExtractedPlayers(playersWithStats);
+      const teamBPlayers = formation.teamB.map(player => ({
+        ...player,
+        goals: player.goals || 0,
+        assists: player.assists || 0,
+        saves: player.saves || 0,
+        defenderVoting: player.defenderVoting || 1,
+        squad: 'Team B'
+      }));
+      
+      const allPlayers = [...teamAPlayers, ...teamBPlayers];
+      setExtractedPlayers(allPlayers);
       setIsEditing(true);
     }
   };
@@ -43,7 +52,6 @@ const DataExtractor = () => {
         : player
     ));
   };
-
   const downloadCSV = () => {
     if (extractedPlayers.length === 0) {
       toast({
@@ -54,11 +62,12 @@ const DataExtractor = () => {
       return;
     }
 
-    const headers = ['Name', 'Position', 'Goals', 'Assists', 'Saves', 'DefenderVoting'];
+    const headers = ['Name', 'Squad', 'Position', 'Goals', 'Assists', 'Saves', 'DefenderVoting'];
     const csvContent = [
       headers.join(','),
       ...extractedPlayers.map(player => [
         `"${player.name}"`,
+        `"${player.squad}"`,
         player.position,
         player.goals,
         player.assists,
@@ -161,9 +170,7 @@ const DataExtractor = () => {
               )}
             </SelectContent>
           </Select>
-        </div>
-
-        {/* Manual Data Editing */}
+        </div>        {/* Manual Data Editing */}
         {isEditing && extractedPlayers.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -185,75 +192,159 @@ const DataExtractor = () => {
               </div>
             </div>
 
-            <div className="border border-[#B8CFCE] rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-[#333446]">Player</TableHead>
-                    <TableHead className="text-[#333446]">Position</TableHead>
-                    <TableHead className="text-[#333446]">Goals</TableHead>
-                    <TableHead className="text-[#333446]">Assists</TableHead>
-                    <TableHead className="text-[#333446]">Saves</TableHead>
-                    <TableHead className="text-[#333446]">Defender Voting</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {extractedPlayers.map((player) => (
-                    <TableRow key={player.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <span>{getPositionEmoji(player.position)}</span>
-                          {player.name}
-                        </div>
-                      </TableCell>
-                      <TableCell>{player.position}</TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={player.goals}
-                          onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
-                          className="w-20 h-8 text-center"
-                          min="0"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={player.assists}
-                          onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
-                          className="w-20 h-8 text-center"
-                          min="0"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={player.saves}
-                          onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
-                          className="w-20 h-8 text-center"
-                          min="0"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={player.defenderVoting}
-                          onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
-                          className="w-20 h-8 text-center"
-                          min="1"
-                          max="10"
-                          step="0.1"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            {/* Team A Players */}
+            {extractedPlayers.filter(p => p.squad === 'Team A').length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-[#333446] flex items-center gap-2">
+                  <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
+                  Team A Players ({extractedPlayers.filter(p => p.squad === 'Team A').length})
+                </h4>
+                <div className="border border-[#B8CFCE] rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-[#333446]">Player</TableHead>
+                        <TableHead className="text-[#333446]">Position</TableHead>
+                        <TableHead className="text-[#333446]">Goals</TableHead>
+                        <TableHead className="text-[#333446]">Assists</TableHead>
+                        <TableHead className="text-[#333446]">Saves</TableHead>
+                        <TableHead className="text-[#333446]">Defender Voting</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {extractedPlayers.filter(p => p.squad === 'Team A').map((player) => (
+                        <TableRow key={player.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <span>{getPositionEmoji(player.position)}</span>
+                              {player.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>{player.position}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.goals}
+                              onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="0"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.assists}
+                              onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="0"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.saves}
+                              onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="0"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.defenderVoting}
+                              onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="1"
+                              max="10"
+                              step="0.1"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {/* Team B Players */}
+            {extractedPlayers.filter(p => p.squad === 'Team B').length > 0 && (
+              <div className="space-y-2">
+                <h4 className="font-medium text-[#333446] flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                  Team B Players ({extractedPlayers.filter(p => p.squad === 'Team B').length})
+                </h4>
+                <div className="border border-[#B8CFCE] rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-[#333446]">Player</TableHead>
+                        <TableHead className="text-[#333446]">Position</TableHead>
+                        <TableHead className="text-[#333446]">Goals</TableHead>
+                        <TableHead className="text-[#333446]">Assists</TableHead>
+                        <TableHead className="text-[#333446]">Saves</TableHead>
+                        <TableHead className="text-[#333446]">Defender Voting</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {extractedPlayers.filter(p => p.squad === 'Team B').map((player) => (
+                        <TableRow key={player.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <span>{getPositionEmoji(player.position)}</span>
+                              {player.name}
+                            </div>
+                          </TableCell>
+                          <TableCell>{player.position}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.goals}
+                              onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="0"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.assists}
+                              onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="0"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.saves}
+                              onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="0"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              value={player.defenderVoting}
+                              onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
+                              className="w-20 h-8 text-center"
+                              min="1"
+                              max="10"
+                              step="0.1"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
 
             <div className="bg-[#EAEFEF] p-3 rounded-lg">
               <h4 className="font-medium text-[#333446] mb-2">Quick Stats Summary:</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                 <div className="text-center">
                   <div className="font-bold text-[#333446]">{extractedPlayers.length}</div>
                   <div className="text-[#7F8CAA]">Total Players</div>
@@ -275,6 +366,51 @@ const DataExtractor = () => {
                     {extractedPlayers.reduce((sum, p) => sum + p.saves, 0)}
                   </div>
                   <div className="text-[#7F8CAA]">Total Saves</div>
+                </div>
+              </div>
+              
+              {/* Team-specific stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-3 rounded border-l-4 border-blue-600">
+                  <h5 className="font-medium text-[#333446] mb-2 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                    Team A Stats
+                  </h5>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team A').reduce((sum, p) => sum + p.goals, 0)}
+                      </div>
+                      <div className="text-[#7F8CAA]">Goals</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-blue-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team A').reduce((sum, p) => sum + p.assists, 0)}
+                      </div>
+                      <div className="text-[#7F8CAA]">Assists</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-3 rounded border-l-4 border-red-600">
+                  <h5 className="font-medium text-[#333446] mb-2 flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                    Team B Stats
+                  </h5>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="text-center">
+                      <div className="font-bold text-red-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team B').reduce((sum, p) => sum + p.goals, 0)}
+                      </div>
+                      <div className="text-[#7F8CAA]">Goals</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-red-600">
+                        {extractedPlayers.filter(p => p.squad === 'Team B').reduce((sum, p) => sum + p.assists, 0)}
+                      </div>
+                      <div className="text-[#7F8CAA]">Assists</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
