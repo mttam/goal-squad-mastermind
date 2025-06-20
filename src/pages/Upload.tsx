@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { Player } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
+import DataExtractor from '@/components/DataExtractor';
 
 const Upload = () => {
   const { setPlayers, players } = useFantacalcietto();
@@ -166,6 +167,9 @@ const Upload = () => {
         <h1 className="text-3xl font-bold text-[#333446]">Upload Data 📤</h1>
         <p className="text-[#7F8CAA]">Import player data and update rankings from CSV files</p>
       </div>
+
+      {/* Data Extractor - NEW SECTION */}
+      <DataExtractor />
 
       {/* Upload Instructions */}
       <Card className="bg-white border-[#B8CFCE]">
