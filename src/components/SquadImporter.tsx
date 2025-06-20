@@ -42,6 +42,15 @@ const SquadImporter = () => {
     return result.map(field => field.replace(/^"|"$/g, ''));
   };
 
+  const isHeaderRow = (line: string): boolean => {
+    const fields = parseCSVLine(line);
+    return fields.length === 4 && 
+           fields[0].toLowerCase().includes('squad') && 
+           fields[1].toLowerCase().includes('mode') &&
+           fields[2].toLowerCase().includes('players') &&
+           fields[3].toLowerCase().includes('created');
+  };
+
   const handleImport = () => {
     if (!csvData.trim()) {
       toast({
@@ -52,18 +61,36 @@ const SquadImporter = () => {
       return;
     }
 
-    const lines = csvData.trim().split('\n');
+    const lines = csvData.trim().split('\n').filter(line => line.trim());
     const importedSquads: Squad[] = [];
     const errors: string[] = [];
+    const warnings: string[] = [];
 
-    lines.forEach((line, index) => {
-      if (!line.trim()) return;
+    // Skip header row if present
+    const dataLines = lines.filter((line, index) => {
+      if (index === 0 && isHeaderRow(line)) {
+        return false;
+      }
+      return true;
+    });
 
+    if (dataLines.length === 0) {
+      toast({
+        title: "No Data to Import ❌",
+        description: "CSV file appears to contain only headers",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    dataLines.forEach((line, index) => {
+      const actualLineNumber = lines.indexOf(line) + 1;
+      
       try {
         const fields = parseCSVLine(line);
         
         if (fields.length !== 4) {
-          errors.push(`Line ${index + 1}: Expected 4 fields (Squad Name, Mode, Players, Created At)`);
+          errors.push(`Line ${actualLineNumber}: Expected 4 fields (Squad Name, Mode, Players, Created At), got ${fields.length}`);
           return;
         }
 
@@ -71,7 +98,7 @@ const SquadImporter = () => {
 
         // Validate mode
         if (!['5vs5', '6vs6', '7vs7', '8vs8'].includes(mode)) {
-          errors.push(`Line ${index + 1}: Invalid mode "${mode}". Must be 5vs5, 6vs6, 7vs7, or 8vs8`);
+          errors.push(`Line ${actualLineNumber}: Invalid mode "${mode}". Must be 5vs5, 6vs6, 7vs7, or 8vs8`);
           return;
         }
 
@@ -90,11 +117,15 @@ const SquadImporter = () => {
         });
 
         if (missingPlayers.length > 0) {
-          errors.push(`Line ${index + 1}: Players not found: ${missingPlayers.join(', ')}`);
+          errors.push(`Line ${actualLineNumber}: Players not found: ${missingPlayers.join(', ')}`);
+          
+          // Suggest similar player names
+          const availablePlayerNames = players.map(p => p.name);
+          warnings.push(`Available players: ${availablePlayerNames.slice(0, 10).join(', ')}${availablePlayerNames.length > 10 ? '...' : ''}`);
         }
 
         if (squadPlayers.length === 0) {
-          errors.push(`Line ${index + 1}: No valid players found for squad "${squadName}"`);
+          errors.push(`Line ${actualLineNumber}: No valid players found for squad "${squadName}"`);
           return;
         }
 
@@ -107,7 +138,7 @@ const SquadImporter = () => {
           }
         } catch {
           parsedDate = new Date();
-          errors.push(`Line ${index + 1}: Invalid date "${createdAt}", using current date`);
+          warnings.push(`Line ${actualLineNumber}: Invalid date "${createdAt}", using current date`);
         }
 
         const squad: Squad = {
@@ -120,7 +151,7 @@ const SquadImporter = () => {
 
         importedSquads.push(squad);
       } catch (error) {
-        errors.push(`Line ${index + 1}: Failed to parse - ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(`Line ${actualLineNumber}: Failed to parse - ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     });
 
@@ -131,21 +162,24 @@ const SquadImporter = () => {
     if (importedSquads.length > 0) {
       toast({
         title: "Squads Imported Successfully! 📥",
-        description: `${importedSquads.length} squad(s) imported${errors.length > 0 ? ` with ${errors.length} warning(s)` : ''}`,
+        description: `${importedSquads.length} squad(s) imported${errors.length > 0 ? ` with ${errors.length} error(s)` : ''}`,
       });
     }
 
     if (errors.length > 0 && importedSquads.length === 0) {
       toast({
         title: "Import Failed ❌",
-        description: `${errors.length} error(s) occurred. Please check your data format.`,
+        description: `${errors.length} error(s) occurred. Check console for details.`,
         variant: "destructive",
       });
     }
 
-    // Log errors to console for debugging
+    // Log errors and warnings to console for debugging
     if (errors.length > 0) {
       console.log('Import errors:', errors);
+    }
+    if (warnings.length > 0) {
+      console.log('Import warnings:', warnings);
     }
 
     // Clear the input if import was successful
@@ -154,7 +188,8 @@ const SquadImporter = () => {
     }
   };
 
-  const exampleCSV = `"Team A - 6vs6","6vs6","Jacopo Di Donna; Ciccio Gargiullo; Mattia Ambrosiano; Francesco Castiglia; Vittorio Scarnati; Francesco Gencarelli","2025-06-20"
+  const exampleCSV = `Squad Name,Mode,Players,Created At
+"Team A - 6vs6","6vs6","Jacopo Di Donna; Ciccio Gargiullo; Mattia Ambrosiano; Francesco Castiglia; Vittorio Scarnati; Francesco Gencarelli","2025-06-20"
 "Team B - 6vs6","6vs6","Nicola Di Donna; Giovanni Bonofiglio; Antonello Santopaolo; Alessandro Bruno; Vladimir Vena; Francesco Brogno","2025-06-20"`;
 
   return (
@@ -162,12 +197,12 @@ const SquadImporter = () => {
       <CardHeader>
         <CardTitle className="text-[#333446]">Import Squads from CSV 📥</CardTitle>
         <p className="text-sm text-[#7F8CAA]">
-          Import squads using CSV format: Squad Name, Mode, Players (semicolon separated), Created At
+          Import squads using CSV format with header row: Squad Name, Mode, Players (semicolon separated), Created At
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="csvData">CSV Data</Label>
+          <Label htmlFor="csvData">CSV Data (with headers)</Label>
           <Textarea
             id="csvData"
             placeholder={`Enter CSV data here...\n\nExample:\n${exampleCSV}`}
@@ -180,11 +215,19 @@ const SquadImporter = () => {
         <div className="bg-[#EAEFEF] p-3 rounded-lg">
           <h4 className="font-medium text-[#333446] mb-2">Format Requirements:</h4>
           <ul className="text-sm text-[#7F8CAA] space-y-1">
+            <li>• First row should be headers: Squad Name,Mode,Players,Created At</li>
             <li>• Squad Name: Any text (use quotes if contains commas)</li>
             <li>• Mode: 5vs5, 6vs6, 7vs7, or 8vs8</li>
-            <li>• Players: Semicolon-separated player names</li>
+            <li>• Players: Semicolon-separated player names (must match existing players)</li>
             <li>• Created At: Date in YYYY-MM-DD format</li>
           </ul>
+        </div>
+
+        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <h4 className="font-medium text-blue-800 mb-2">Available Players ({players.length}):</h4>
+          <div className="text-sm text-blue-700 max-h-24 overflow-y-auto">
+            {players.map(player => player.name).join(', ')}
+          </div>
         </div>
 
         <Button 
