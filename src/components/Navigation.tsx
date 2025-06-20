@@ -8,11 +8,11 @@ import { cn } from '@/lib/utils';
 const Navigation = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-
   const navItems = [
     { path: '/', label: 'Ranking', icon: '🏆' },
     { path: '/squad-creator', label: 'Squad Creator', icon: '⚽' },
     { path: '/match-tools', label: 'Match Tools', icon: '🔧' },
+    { path: '/data-extractor', label: 'Data Extractor', icon: '📊' },
     { path: '/download', label: 'Download', icon: '📥' },
     { path: '/upload', label: 'Upload', icon: '📤' },
   ];

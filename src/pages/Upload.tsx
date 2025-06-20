@@ -168,9 +168,6 @@ const Upload = () => {
         <p className="text-[#7F8CAA]">Import player data and update rankings from CSV files</p>
       </div>
 
-      {/* Data Extractor - NEW SECTION */}
-      <DataExtractor />
-
       {/* Upload Instructions */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>

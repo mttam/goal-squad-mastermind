@@ -9,6 +9,7 @@ import Navigation from "@/components/Navigation";
 import Ranking from "@/pages/Ranking";
 import SquadCreator from "@/pages/SquadCreator";
 import MatchTools from "@/pages/MatchTools";
+import DataExtractor from "@/pages/DataExtractor";
 import Download from "@/pages/Download";
 import Upload from "@/pages/Upload";
 import NotFound from "./pages/NotFound";
@@ -23,11 +24,11 @@ const App = () => (
       <BrowserRouter>
         <FantacalciettoProvider>
           <div className="min-h-screen bg-[#EAEFEF]">
-            <Navigation />
-            <Routes>
+            <Navigation />            <Routes>
               <Route path="/" element={<Ranking />} />
               <Route path="/squad-creator" element={<SquadCreator />} />
               <Route path="/match-tools" element={<MatchTools />} />
+              <Route path="/data-extractor" element={<DataExtractor />} />
               <Route path="/download" element={<Download />} />
               <Route path="/upload" element={<Upload />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
