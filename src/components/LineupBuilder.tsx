@@ -33,13 +33,14 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     '7vs7': ['4-2', '3-3', '2-4', '5-1', '4-1-1', '3-2-1', '3-1-2', '2-3-1', '2-2-2', '2-1-3', '1-4-1', '1-3-2', '1-2-3'],
     '8vs8': ['4-3', '3-4', '5-2', '2-5', '6-1', '1-6', '5-1-1', '4-2-1', '4-1-2', '3-3-1', '3-2-2', '3-1-3', '2-4-1', '2-3-2', '2-2-3', '1-5-1', '1-4-2', '1-3-3', '1-2-4']
   };
-
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedFormationA, setSelectedFormationA] = useState<string>('');
   const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const fieldRef = useRef<HTMLDivElement>(null);
+  const fullscreenContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (formationData) {
@@ -57,7 +58,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
       setPlayers([...teamAPlayers, ...teamBPlayers]);
     }
   }, [formation, formationData]);
-
   // Recalculate positions when field becomes available or dimensions change
   useEffect(() => {
     if (!fieldRef.current) return;
@@ -90,7 +90,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [players.length, formation, formationData, selectedFormationA, selectedFormationB, selectedMode]);
+  }, [players.length, formation, formationData, selectedFormationA, selectedFormationB, selectedMode, isFullscreen]);
 
   // Additional effect to handle initial positioning when formations are first applied
   useEffect(() => {
@@ -310,10 +310,64 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
   const handleMouseUp = () => {
     setDraggedPlayer(null);
   };
-
   const handleTouchEnd = () => {
     setDraggedPlayer(null);
   };
+
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      // Enter fullscreen
+      if (fullscreenContainerRef.current) {
+        if (fullscreenContainerRef.current.requestFullscreen) {
+          fullscreenContainerRef.current.requestFullscreen();
+        } else if ((fullscreenContainerRef.current as any).mozRequestFullScreen) {
+          (fullscreenContainerRef.current as any).mozRequestFullScreen();
+        } else if ((fullscreenContainerRef.current as any).webkitRequestFullscreen) {
+          (fullscreenContainerRef.current as any).webkitRequestFullscreen();
+        } else if ((fullscreenContainerRef.current as any).msRequestFullscreen) {
+          (fullscreenContainerRef.current as any).msRequestFullscreen();
+        }
+      }
+      setIsFullscreen(true);
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   const modes = [
     { value: '5vs5', label: '5 vs 5' },
@@ -477,29 +531,45 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
               </Button>
             )}
           </>
-        )}
-
-        {/* Field */}
+        )}        {/* Field */}
         {players.length > 0 && (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333446]">
-              {formationData 
-                ? `${formationData.teamA} vs ${formationData.teamB} (${formationData.mode})` 
-                : formation 
-                  ? `${formation.name} - Formation View` 
-                  : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-[#333446]">
+                {formationData 
+                  ? `${formationData.teamA} vs ${formationData.teamB} (${formationData.mode})` 
+                  : formation 
+                    ? `${formation.name} - Formation View` 
+                    : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
+              </label>
+              <Button
+                onClick={toggleFullscreen}
+                variant="outline"
+                size="sm"
+                className="text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]"
+                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              >
+                {isFullscreen ? '🪟' : '⛶'}
+              </Button>            </div>
 
             <div
-              ref={fieldRef}
-              className="relative w-full h-96 bg-gradient-to-b from-green-400 to-green-500 border-4 border-[#333446] rounded-lg overflow-hidden cursor-crosshair"
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{ userSelect: 'none', touchAction: 'none' }}
+              ref={fullscreenContainerRef}
+              className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-black flex items-center justify-center' : ''}`}
             >
+              <div
+                ref={fieldRef}
+                className={`relative bg-gradient-to-b from-green-400 to-green-500 border-4 border-[#333446] rounded-lg overflow-hidden cursor-crosshair ${
+                  isFullscreen 
+                    ? 'w-[95vw] h-[95vh] max-w-none max-h-none' 
+                    : 'w-full h-96'
+                }`}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ userSelect: 'none', touchAction: 'none' }}
+              >
               {/* Soccer field markings */}
               <div className="absolute inset-0">
                 {/* Center line (horizontal) */}
@@ -524,10 +594,13 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
               </div>
 
               {/* Players */}
-              {players.map((player) => (
-                <div
+              {players.map((player) => (                <div
                   key={player.id}
-                  className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
+                  className={`absolute rounded-full flex items-center justify-center text-white font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
+                    isFullscreen 
+                      ? 'w-12 h-12 text-sm' 
+                      : 'w-8 h-8 text-xs'
+                  } ${
                     player.isGK 
                       ? (player.team === 'A' ? 'bg-blue-800' : 'bg-red-800')
                       : (player.team === 'A' ? 'bg-blue-600' : 'bg-red-600')
@@ -539,12 +612,23 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                   }}
                   onMouseDown={() => handleMouseDown(player.id)}
                   onTouchStart={() => handleTouchStart(player.id)}
-                  title={player.originalPlayer?.name || `Team ${player.team} - Player ${getPlayerDisplayNumber(player)}`}
-                >
+                  title={player.originalPlayer?.name || `Team ${player.team} - Player ${getPlayerDisplayNumber(player)}`}                >
                   {player.originalPlayer?.name.split(' ')[0].substring(0, 2).toUpperCase() || getPlayerDisplayNumber(player)}
                 </div>
               ))}
             </div>
+
+            {/* Fullscreen Exit Button - only show in fullscreen */}
+            {isFullscreen && (
+              <Button
+                onClick={toggleFullscreen}
+                className="absolute top-4 right-4 z-10 bg-black/50 text-white hover:bg-black/70 border-white"
+                size="sm"
+              >
+                ✕ Exit Fullscreen
+              </Button>
+            )}
+          </div>
 
             {/* Team Legend */}
             <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
