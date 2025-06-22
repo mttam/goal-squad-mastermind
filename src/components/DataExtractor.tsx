@@ -43,14 +43,25 @@ const DataExtractor = () => {
       setExtractedPlayers(allPlayers);
       setIsEditing(true);
     }
-  };
-
-  const updatePlayerStat = (playerId: string, field: keyof Player, value: string | number) => {
+  };  const updatePlayerStat = (playerId: string, field: keyof Player, value: string | number) => {
     setExtractedPlayers(prev => prev.map(player => 
       player.id === playerId 
-        ? { ...player, [field]: typeof value === 'string' ? parseFloat(value) || 0 : value }
+        ? { 
+            ...player, 
+            [field]: typeof value === 'string' 
+              ? (value === '' ? '' : parseFloat(value) || 0) 
+              : value 
+          }
         : player
     ));
+  };
+
+  const removePlayer = (playerId: string) => {
+    setExtractedPlayers(prev => prev.filter(player => player.id !== playerId));
+    toast({
+      title: "Player Removed! 🗑️",
+      description: "Player has been removed from the extracted list",
+    });
   };
   const downloadCSV = () => {
     if (extractedPlayers.length === 0) {
@@ -265,18 +276,26 @@ const DataExtractor = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-
-                {/* Mobile Cards */}
+                </div>                {/* Mobile Cards */}
                 <div className="md:hidden space-y-3">
                   {extractedPlayers.filter(p => p.squad === 'Team A').map((player) => (
                     <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xl">{getPositionEmoji(player.position)}</span>
-                        <div>
-                          <div className="font-medium text-[#333446]">{player.name}</div>
-                          <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{getPositionEmoji(player.position)}</span>
+                          <div>
+                            <div className="font-medium text-[#333446]">{player.name}</div>
+                            <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                          </div>
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removePlayer(player.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                          🗑️
+                        </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
@@ -401,18 +420,26 @@ const DataExtractor = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-
-                {/* Mobile Cards */}
+                </div>                {/* Mobile Cards */}
                 <div className="md:hidden space-y-3">
                   {extractedPlayers.filter(p => p.squad === 'Team B').map((player) => (
                     <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-xl">{getPositionEmoji(player.position)}</span>
-                        <div>
-                          <div className="font-medium text-[#333446]">{player.name}</div>
-                          <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{getPositionEmoji(player.position)}</span>
+                          <div>
+                            <div className="font-medium text-[#333446]">{player.name}</div>
+                            <div className="text-sm text-[#7F8CAA]">{player.position}</div>
+                          </div>
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removePlayer(player.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        >
+                          🗑️
+                        </Button>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
