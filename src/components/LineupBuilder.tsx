@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ZoomIn, ZoomOut, RotateCcw, Maximize, Minimize } from 'lucide-react';
+import { Maximize, Minimize } from 'lucide-react';
 import { MatchMode, Formation, Player } from '@/types/fantacalcietto';
 
 interface MinimalFormationData {
@@ -40,7 +40,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
   const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const fieldRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -258,18 +257,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     setPlayers([]);
   };
 
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.2, 2)); // Max zoom 2x
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.2, 0.5)); // Min zoom 0.5x
-  };
-
-  const handleResetZoom = () => {
-    setZoomLevel(1);
-  };
-
   const handleMouseDown = (playerId: number) => {
     setDraggedPlayer(playerId);
   };
@@ -308,11 +295,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
     const rect = fieldRef.current.getBoundingClientRect();
     const coords = getEventCoordinates(e);
-    const x = (coords.x - rect.left) / zoomLevel;
-    const y = (coords.y - rect.top) / zoomLevel;
+    const x = coords.x - rect.left;
+    const y = coords.y - rect.top;
 
-    const boundedX = Math.max(15, Math.min(x, (rect.width / zoomLevel) - 15));
-    const boundedY = Math.max(15, Math.min(y, (rect.height / zoomLevel) - 15));
+    const boundedX = Math.max(15, Math.min(x, rect.width - 15));
+    const boundedY = Math.max(15, Math.min(y, rect.height - 15));
 
     setPlayers(prev => 
       prev.map(player => 
@@ -426,40 +413,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
           </h3>
           
           <div className="flex items-center gap-2">
-            {/* Zoom Controls */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomOut}
-              disabled={zoomLevel <= 0.5}
-              className="h-8 w-8 p-0 bg-white text-black hover:bg-gray-200"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </Button>
-            <span className="text-xs min-w-[3rem] text-center">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleZoomIn}
-              disabled={zoomLevel >= 3}
-              className="h-8 w-8 p-0 bg-white text-black hover:bg-gray-200"
-              title="Zoom In"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetZoom}
-              className="h-8 w-8 p-0 bg-white text-black hover:bg-gray-200"
-              title="Reset Zoom"
-            >
-              <RotateCcw className="w-4 h-4" />
-            </Button>
-            
             {/* Exit Fullscreen */}
             <Button
               variant="outline"
@@ -485,8 +438,6 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             style={{ 
-              transform: `scale(${zoomLevel})`,
-              transformOrigin: 'center center',
               userSelect: 'none', 
               touchAction: 'none'
             }}
@@ -669,40 +620,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                     : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
               </label>
               
-              {/* Control Buttons */}
+              {/* Control Button */}
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleZoomOut}
-                  disabled={zoomLevel <= 0.5}
-                  className="h-8 w-8 p-0"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <span className="text-xs text-[#7F8CAA] min-w-[3rem] text-center">
-                  {Math.round(zoomLevel * 100)}%
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleZoomIn}
-                  disabled={zoomLevel >= 2}
-                  className="h-8 w-8 p-0"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetZoom}
-                  className="h-8 w-8 p-0"
-                  title="Reset Zoom"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -730,10 +649,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 style={{ 
-                  width: `${300 * zoomLevel}px`,
-                  height: `${400 * zoomLevel}px`,
-                  transform: `scale(${zoomLevel})`,
-                  transformOrigin: 'top left',
+                  width: '300px',
+                  height: '400px',
                   userSelect: 'none', 
                   touchAction: 'none'
                 }}
