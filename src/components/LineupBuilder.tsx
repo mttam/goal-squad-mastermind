@@ -408,6 +408,10 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     };
   };
 
+  const handleFullscreenToggle = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
   if (isFullscreen && players.length > 0) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col">
