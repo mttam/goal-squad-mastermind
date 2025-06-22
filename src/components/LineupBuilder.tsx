@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { MatchMode, Formation, Player } from '@/types/fantacalcietto';
 
 interface MinimalFormationData {
@@ -39,7 +40,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
   const [selectedFormationB, setSelectedFormationB] = useState<string>('');
   const [players, setPlayers] = useState<FieldPlayer[]>([]);
   const [draggedPlayer, setDraggedPlayer] = useState<number | null>(null);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
   const fieldRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (formationData) {
@@ -254,6 +257,18 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
     setPlayers([]);
   };
 
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.2, 2)); // Max zoom 2x
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.2, 0.5)); // Min zoom 0.5x
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+  };
+
   const handleMouseDown = (playerId: number) => {
     setDraggedPlayer(playerId);
   };
@@ -292,11 +307,11 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
     const rect = fieldRef.current.getBoundingClientRect();
     const coords = getEventCoordinates(e);
-    const x = coords.x - rect.left;
-    const y = coords.y - rect.top;
+    const x = (coords.x - rect.left) / zoomLevel;
+    const y = (coords.y - rect.top) / zoomLevel;
 
-    const boundedX = Math.max(15, Math.min(x, rect.width - 15));
-    const boundedY = Math.max(15, Math.min(y, rect.height - 15));
+    const boundedX = Math.max(15, Math.min(x, (rect.width / zoomLevel) - 15));
+    const boundedY = Math.max(15, Math.min(y, (rect.height / zoomLevel) - 15));
 
     setPlayers(prev => 
       prev.map(player => 
@@ -482,68 +497,119 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
         {/* Field */}
         {players.length > 0 && (
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333446]">
-              {formationData 
-                ? `${formationData.teamA} vs ${formationData.teamB} (${formationData.mode})` 
-                : formation 
-                  ? `${formation.name} - Formation View` 
-                  : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
-            </label>
-
-            <div
-              ref={fieldRef}
-              className="relative w-full h-96 bg-gradient-to-b from-green-400 to-green-500 border-4 border-[#333446] rounded-lg overflow-hidden cursor-crosshair"
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              style={{ userSelect: 'none', touchAction: 'none' }}
-            >
-              {/* Soccer field markings */}
-              <div className="absolute inset-0">
-                {/* Center line (horizontal) */}
-                <div className="absolute left-0 right-0 top-1/2 h-1 bg-white opacity-90 transform -translate-y-0.5"></div>
-                {/* Center circle */}
-                <div className="absolute left-1/2 top-1/2 w-16 h-16 border-2 border-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute left-1/2 top-1/2 w-2 h-2 bg-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-                
-                {/* Top goal area */}
-                <div className="absolute top-0 left-1/2 h-12 w-16 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
-                <div className="absolute top-0 left-1/2 h-6 w-8 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
-                
-                {/* Bottom goal area */}
-                <div className="absolute bottom-0 left-1/2 h-12 w-16 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
-                <div className="absolute bottom-0 left-1/2 h-6 w-8 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
-                
-                {/* Corner arcs */}
-                <div className="absolute top-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-br-full"></div>
-                <div className="absolute top-0 right-0 w-6 h-6 border-2 border-white opacity-90 rounded-bl-full"></div>
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-tr-full"></div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-2 border-white opacity-90 rounded-tl-full"></div>
-              </div>
-
-              {/* Players */}
-              {players.map((player) => (
-                <div
-                  key={player.id}
-                  className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
-                    player.isGK 
-                      ? (player.team === 'A' ? 'bg-blue-800' : 'bg-red-800')
-                      : (player.team === 'A' ? 'bg-blue-600' : 'bg-red-600')
-                  } ${draggedPlayer === player.id ? 'scale-125 z-10' : ''}`}
-                  style={{ 
-                    left: player.x, 
-                    top: player.y,
-                    touchAction: 'none'
-                  }}
-                  onMouseDown={() => handleMouseDown(player.id)}
-                  onTouchStart={() => handleTouchStart(player.id)}
-                  title={player.originalPlayer?.name || `Team ${player.team} - Player ${getPlayerDisplayNumber(player)}`}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-[#333446]">
+                {formationData 
+                  ? `${formationData.teamA} vs ${formationData.teamB} (${formationData.mode})` 
+                  : formation 
+                    ? `${formation.name} - Formation View` 
+                    : `${selectedFormationA} vs ${selectedFormationB}`} - Drag players to reposition
+              </label>
+              
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleZoomOut}
+                  disabled={zoomLevel <= 0.5}
+                  className="h-8 w-8 p-0"
+                  title="Zoom Out"
                 >
-                  {player.originalPlayer?.name.split(' ')[0].substring(0, 2).toUpperCase() || getPlayerDisplayNumber(player)}
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-xs text-[#7F8CAA] min-w-[3rem] text-center">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleZoomIn}
+                  disabled={zoomLevel >= 2}
+                  className="h-8 w-8 p-0"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetZoom}
+                  className="h-8 w-8 p-0"
+                  title="Reset Zoom"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div 
+              ref={containerRef}
+              className="relative w-full overflow-auto border-4 border-[#333446] rounded-lg"
+              style={{ height: '24rem' }}
+            >
+              <div
+                ref={fieldRef}
+                className="relative bg-gradient-to-b from-green-400 to-green-500 cursor-crosshair origin-top-left"
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ 
+                  width: `${300 * zoomLevel}px`,
+                  height: `${400 * zoomLevel}px`,
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: 'top left',
+                  userSelect: 'none', 
+                  touchAction: 'none'
+                }}
+              >
+                {/* Soccer field markings */}
+                <div className="absolute inset-0">
+                  {/* Center line (horizontal) */}
+                  <div className="absolute left-0 right-0 top-1/2 h-1 bg-white opacity-90 transform -translate-y-0.5"></div>
+                  {/* Center circle */}
+                  <div className="absolute left-1/2 top-1/2 w-16 h-16 border-2 border-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+                  <div className="absolute left-1/2 top-1/2 w-2 h-2 bg-white opacity-90 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+                  
+                  {/* Top goal area */}
+                  <div className="absolute top-0 left-1/2 h-12 w-16 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
+                  <div className="absolute top-0 left-1/2 h-6 w-8 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
+                  
+                  {/* Bottom goal area */}
+                  <div className="absolute bottom-0 left-1/2 h-12 w-16 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
+                  <div className="absolute bottom-0 left-1/2 h-6 w-8 border-2 border-white opacity-90 transform -translate-x-1/2"></div>
+                  
+                  {/* Corner arcs */}
+                  <div className="absolute top-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-br-full"></div>
+                  <div className="absolute top-0 right-0 w-6 h-6 border-2 border-white opacity-90 rounded-bl-full"></div>
+                  <div className="absolute bottom-0 left-0 w-6 h-6 border-2 border-white opacity-90 rounded-tr-full"></div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 border-2 border-white opacity-90 rounded-tl-full"></div>
                 </div>
-              ))}
+
+                {/* Players */}
+                {players.map((player) => (
+                  <div
+                    key={player.id}
+                    className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold cursor-move transform -translate-x-1/2 -translate-y-1/2 shadow-lg transition-transform hover:scale-110 border-2 border-white ${
+                      player.isGK 
+                        ? (player.team === 'A' ? 'bg-blue-800' : 'bg-red-800')
+                        : (player.team === 'A' ? 'bg-blue-600' : 'bg-red-600')
+                    } ${draggedPlayer === player.id ? 'scale-125 z-10' : ''}`}
+                    style={{ 
+                      left: player.x, 
+                      top: player.y,
+                      touchAction: 'none'
+                    }}
+                    onMouseDown={() => handleMouseDown(player.id)}
+                    onTouchStart={() => handleTouchStart(player.id)}
+                    title={player.originalPlayer?.name || `Team ${player.team} - Player ${getPlayerDisplayNumber(player)}`}
+                  >
+                    {player.originalPlayer?.name.split(' ')[0].substring(0, 2).toUpperCase() || getPlayerDisplayNumber(player)}
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Team Legend */}
