@@ -10,40 +10,48 @@ import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/types/fantacalcietto';
 
+// Extended Player type to include squad information
+interface ExtractedPlayer extends Player {
+  squad: 'Team A' | 'Team B';
+}
+
 const DataExtractor = () => {
   const { formations, setPlayers, players } = useFantacalcietto();
   const { toast } = useToast();
   const [selectedFormationId, setSelectedFormationId] = useState<string>('');
-  const [extractedPlayers, setExtractedPlayers] = useState<Player[]>([]);
+  const [extractedPlayers, setExtractedPlayers] = useState<ExtractedPlayer[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+
   const handleFormationSelect = (formationId: string) => {
     setSelectedFormationId(formationId);
     const formation = formations.find(f => f.id === formationId);
     
     if (formation) {
-      const teamAPlayers = formation.teamA.map(player => ({
+      const teamAPlayers: ExtractedPlayer[] = formation.teamA.map(player => ({
         ...player,
         goals: player.goals || 0,
         assists: player.assists || 0,
         saves: player.saves || 0,
         defenderVoting: player.defenderVoting || 1,
-        squad: 'Team A'
+        squad: 'Team A' as const
       }));
       
-      const teamBPlayers = formation.teamB.map(player => ({
+      const teamBPlayers: ExtractedPlayer[] = formation.teamB.map(player => ({
         ...player,
         goals: player.goals || 0,
         assists: player.assists || 0,
         saves: player.saves || 0,
         defenderVoting: player.defenderVoting || 1,
-        squad: 'Team B'
+        squad: 'Team B' as const
       }));
       
       const allPlayers = [...teamAPlayers, ...teamBPlayers];
       setExtractedPlayers(allPlayers);
       setIsEditing(true);
     }
-  };  const updatePlayerStat = (playerId: string, field: keyof Player, value: string | number) => {
+  };
+
+  const updatePlayerStat = (playerId: string, field: keyof Player, value: string | number) => {
     setExtractedPlayers(prev => prev.map(player => 
       player.id === playerId 
         ? { 
@@ -63,6 +71,7 @@ const DataExtractor = () => {
       description: "Player has been removed from the extracted list",
     });
   };
+
   const downloadCSV = () => {
     if (extractedPlayers.length === 0) {
       toast({
@@ -119,12 +128,15 @@ const DataExtractor = () => {
 
     extractedPlayers.forEach(newPlayer => {
       const existingIndex = updatedPlayers.findIndex(p => p.name === newPlayer.name);
+      // Remove squad property when saving to database since it's not part of Player interface
+      const { squad, ...playerData } = newPlayer;
+      
       if (existingIndex >= 0) {
-        updatedPlayers[existingIndex] = { ...updatedPlayers[existingIndex], ...newPlayer };
+        updatedPlayers[existingIndex] = { ...updatedPlayers[existingIndex], ...playerData };
         updatedCount++;
       } else {
         updatedPlayers.push({
-          ...newPlayer,
+          ...playerData,
           id: `extracted-${Date.now()}-${Math.random()}`,
         });
         addedCount++;
@@ -181,7 +193,9 @@ const DataExtractor = () => {
               )}
             </SelectContent>
           </Select>
-        </div>        {/* Manual Data Editing */}
+        </div>
+
+        {/* Manual Data Editing */}
         {isEditing && extractedPlayers.length > 0 && (
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -276,7 +290,9 @@ const DataExtractor = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>                {/* Mobile Cards */}
+                </div>
+
+                {/* Mobile Cards */}
                 <div className="md:hidden space-y-3">
                   {extractedPlayers.filter(p => p.squad === 'Team A').map((player) => (
                     <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
@@ -420,7 +436,9 @@ const DataExtractor = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>                {/* Mobile Cards */}
+                </div>
+
+                {/* Mobile Cards */}
                 <div className="md:hidden space-y-3">
                   {extractedPlayers.filter(p => p.squad === 'Team B').map((player) => (
                     <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
@@ -489,7 +507,9 @@ const DataExtractor = () => {
                   ))}
                 </div>
               </div>
-            )}            <div className="bg-[#EAEFEF] p-3 rounded-lg">
+            )}
+
+            <div className="bg-[#EAEFEF] p-3 rounded-lg">
               <h4 className="font-medium text-[#333446] mb-2">Quick Stats Summary:</h4>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
                 <div className="text-center">
