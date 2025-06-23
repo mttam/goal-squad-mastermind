@@ -110,8 +110,47 @@ const Ranking = () => {
                   <TableCell className="text-[#7F8CAA]">{player.assists}</TableCell>
                 </TableRow>
               ))}
-            </TableBody>
-          </Table>
+            </TableBody>          </Table>
+        </CardContent>
+      </Card>
+
+      {/* References Footer */}
+      <Card className="bg-white border-[#B8CFCE]">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-4">
+            <h3 className="text-lg font-medium text-[#333446]">Powered by</h3>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm">
+              <a 
+                href="https://github.com/mttam" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[#7F8CAA] hover:text-[#333446] transition-colors"
+              >
+                <span>👨‍💻</span>
+                <span>@mttam</span>
+              </a>
+              <span className="hidden sm:block text-[#B8CFCE]">•</span>
+              <a 
+                href="https://lovable.dev/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[#7F8CAA] hover:text-[#333446] transition-colors"
+              >
+                <span>💖</span>
+                <span>Lovable</span>
+              </a>
+              <span className="hidden sm:block text-[#B8CFCE]">•</span>
+              <a 
+                href="https://github.com/features/copilot" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[#7F8CAA] hover:text-[#333446] transition-colors"
+              >
+                <span>🤖</span>
+                <span>GitHub Copilot</span>
+              </a>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
