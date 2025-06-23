@@ -157,8 +157,13 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
 
     loadData();
   }, [setPlayers, setSquads, setFormations, setDues]);
-
   const addSquad = useCallback((squad: Squad) => {
+    setSquadsState(prev => {
+      const updated = [...prev, squad];
+      console.log('Adding squad:', squad);
+      console.log('Updated squads:', updated);
+      return updated;
+    });
     setSquads(prev => [...prev, squad]);
   }, [setSquads]);
 

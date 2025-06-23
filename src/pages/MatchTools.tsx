@@ -14,6 +14,17 @@ const MatchTools = () => {
   const { players, squads, formations, dues, addFormation, addDue, updateDue, setDues } = useFantacalcietto();
   const { toast } = useToast();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('MatchTools - Current data:', {
+      players: players.length,
+      squads: squads.length,
+      formations: formations.length,
+      dues: dues.length
+    });
+    console.log('MatchTools - Squads:', squads);
+  }, [players, squads, formations, dues]);
+
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
   const [selectedSquadB, setSelectedSquadB] = useState('');
@@ -540,12 +551,23 @@ const MatchTools = () => {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-[#333446]">Match Tools ⚽</h1>
         <p className="text-[#7F8CAA]">Manage formations, goalkeeper rotations, and player dues</p>
-      </div>
-
-      {/* Formation Generator */}
+      </div>      {/* Formation Generator */}
       <Card className="bg-white border-[#B8CFCE]">
         <CardHeader>
           <CardTitle className="text-[#333446]">Formation Generator 📋</CardTitle>
+          {squads.length === 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-600">⚠️</span>
+                <div>
+                  <p className="text-sm font-medium text-yellow-800">No squads available</p>
+                  <p className="text-xs text-yellow-600">
+                    Go to Squad Creator to create teams first, then return here to generate formations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -564,9 +586,7 @@ const MatchTools = () => {
                 <span className="text-sm font-medium">{mode.label}</span>
               </Button>
             ))}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
+          </div>          <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Team A</Label>
               <Select value={selectedSquadA} onValueChange={setSelectedSquadA}>
@@ -574,13 +594,24 @@ const MatchTools = () => {
                   <SelectValue placeholder="Select Team A" />
                 </SelectTrigger>
                 <SelectContent>
-                  {squads.filter(s => s.mode === selectedMode).map((squad) => (
-                    <SelectItem key={squad.id} value={squad.id}>
-                      🔴 {squad.name}
+                  {squads.filter(s => s.mode === selectedMode).length > 0 ? (
+                    squads.filter(s => s.mode === selectedMode).map((squad) => (
+                      <SelectItem key={squad.id} value={squad.id}>
+                        🔴 {squad.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-squads" disabled>
+                      No squads available for {selectedMode} mode
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
+              {squads.filter(s => s.mode === selectedMode).length === 0 && (
+                <p className="text-xs text-red-600">
+                  Create squads in Squad Creator first
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -590,13 +621,24 @@ const MatchTools = () => {
                   <SelectValue placeholder="Select Team B" />
                 </SelectTrigger>
                 <SelectContent>
-                  {squads.filter(s => s.mode === selectedMode && s.id !== selectedSquadA).map((squad) => (
-                    <SelectItem key={squad.id} value={squad.id}>
-                      🔵 {squad.name}
+                  {squads.filter(s => s.mode === selectedMode && s.id !== selectedSquadA).length > 0 ? (
+                    squads.filter(s => s.mode === selectedMode && s.id !== selectedSquadA).map((squad) => (
+                      <SelectItem key={squad.id} value={squad.id}>
+                        🔵 {squad.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-squads" disabled>
+                      {selectedSquadA ? 'No other squads available' : `No squads available for ${selectedMode} mode`}
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
+              {squads.filter(s => s.mode === selectedMode && s.id !== selectedSquadA).length === 0 && (
+                <p className="text-xs text-red-600">
+                  {selectedSquadA ? 'Create another squad for this mode' : 'Create squads in Squad Creator first'}
+                </p>
+              )}
             </div>
           </div>
 
