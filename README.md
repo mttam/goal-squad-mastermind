@@ -61,7 +61,7 @@
 
 ```sh
 # Clone the repository
-git clone <YOUR_GIT_URL>
+git clone https://github.com/mttam/goal-squad-mastermind.git
 
 # Navigate to project directory
 cd goal-squad-mastermind
