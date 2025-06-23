@@ -423,9 +423,50 @@ const SquadCreator = () => {
               </Card>
             </div>
           )}
-        </TabsContent>
+        </TabsContent>        <TabsContent value="manual" className="space-y-6">
+          {/* Mode & Formation Selection for Manual Creation */}
+          <Card className="bg-white border-[#B8CFCE]">
+            <CardHeader>
+              <CardTitle className="text-[#333446]">Select Match Mode & Formation</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {modes.map((mode) => (
+                  <Button
+                    key={mode.value}
+                    variant={selectedMode === mode.value ? "default" : "outline"}
+                    onClick={() => setSelectedMode(mode.value as MatchMode)}
+                    className={`p-4 h-auto flex flex-col gap-2 ${
+                      selectedMode === mode.value 
+                        ? 'bg-[#333446] text-white' 
+                        : 'text-[#333446] border-[#B8CFCE] hover:bg-[#EAEFEF]'
+                    }`}
+                  >
+                    <span className="text-2xl">{mode.icon}</span>
+                    <span className="text-sm font-medium">{mode.label}</span>
+                  </Button>
+                ))}
+              </div>
 
-        <TabsContent value="manual" className="space-y-6">
+              {/* Formation Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="manual-formation">Formation (Optional)</Label>
+                <Select value={selectedFormation} onValueChange={setSelectedFormation}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Formation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formations[selectedMode].map((formation) => (
+                      <SelectItem key={formation} value={formation}>
+                        ⚽ {formation}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="bg-white border-[#B8CFCE]">
             <CardHeader>
               <CardTitle className="text-[#333446]">Select Players for Manual Team Creation</CardTitle>
@@ -465,12 +506,11 @@ const SquadCreator = () => {
                 ))}
               </div>
             </CardContent>
-          </Card>
-
-          {selectedPlayers.length > 0 && (
+          </Card>          {selectedPlayers.length > 0 && (
             <ManualTeamCreator 
               selectedPlayers={players.filter(p => selectedPlayers.includes(p.id))}
               selectedMode={selectedMode}
+              selectedFormation={selectedFormation}
             />
           )}
         </TabsContent>

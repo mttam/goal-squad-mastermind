@@ -11,9 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 interface ManualTeamCreatorProps {
   selectedPlayers: Player[];
   selectedMode: MatchMode;
+  selectedFormation?: string;
 }
 
-const ManualTeamCreator = ({ selectedPlayers, selectedMode }: ManualTeamCreatorProps) => {
+const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }: ManualTeamCreatorProps) => {
   const { addSquad } = useFantacalcietto();
   const { toast } = useToast();
   const [teamAName, setTeamAName] = useState(`Team A - ${selectedMode}`);
@@ -68,7 +69,6 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode }: ManualTeamCreatorP
       default: return '⚽';
     }
   };
-
   const handleSaveTeams = () => {
     if (teamA.length === 0 && teamB.length === 0) {
       toast({
@@ -79,10 +79,12 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode }: ManualTeamCreatorP
       return;
     }
 
+    const formationSuffix = selectedFormation ? ` (${selectedFormation})` : '';
+
     if (teamA.length > 0) {
       addSquad({
         id: `manual-squad-${Date.now()}-a`,
-        name: teamAName,
+        name: `${teamAName}${formationSuffix}`,
         players: teamA,
         mode: selectedMode,
         createdAt: new Date(),
@@ -92,7 +94,7 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode }: ManualTeamCreatorP
     if (teamB.length > 0) {
       addSquad({
         id: `manual-squad-${Date.now()}-b`,
-        name: teamBName,
+        name: `${teamBName}${formationSuffix}`,
         players: teamB,
         mode: selectedMode,
         createdAt: new Date(),
