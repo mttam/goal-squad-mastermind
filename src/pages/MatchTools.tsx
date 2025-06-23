@@ -39,12 +39,9 @@ const MatchTools = () => {
     '7vs7': ['4-2', '3-3', '2-4', '5-1', '4-1-1', '3-2-1', '3-1-2', '2-3-1', '2-2-2', '2-1-3', '1-4-1', '1-3-2', '1-2-3'],
     '8vs8': ['4-3', '3-4', '5-2', '2-5', '6-1', '1-6', '5-1-1', '4-2-1', '4-1-2', '3-3-1', '3-2-2', '3-1-3', '2-4-1', '2-3-2', '2-2-3', '1-5-1', '1-4-2', '1-3-3', '1-2-4']
   };
-
-  // Local storage keys
+  // Local storage keys (legacy - now handled by context)
   const STORAGE_KEYS = {
-    formations: 'fantacalcietto_formations',
-    dues: 'fantacalcietto_dues',
-    goalkeepers: 'fantacalcietto_goalkeepers'
+    goalkeepers: 'fantacalcietto-goalkeepers'
   };
 
   // Load data from localStorage on component mount
@@ -56,42 +53,23 @@ const MatchTools = () => {
         setSelectedGoalkeepers(JSON.parse(savedGoalkeepers));
       }
     } catch (error) {
-      console.error('Error loading data from localStorage:', error);
+      console.error('Error loading goalkeepers from localStorage:', error);
     }
   }, []);
 
-  // Save formations to localStorage whenever generatedFormation changes
+  // Save formations to context (automatically persisted)
   useEffect(() => {
     if (generatedFormation) {
-      try {
-        const savedFormations = localStorage.getItem(STORAGE_KEYS.formations);
-        let formationsArray = savedFormations ? JSON.parse(savedFormations) : [];
-        
-        // Add new formation or update existing
-        const existingIndex = formationsArray.findIndex((f: Formation) => f.id === generatedFormation.id);
-        if (existingIndex >= 0) {
-          formationsArray[existingIndex] = generatedFormation;
-        } else {
-          formationsArray.push(generatedFormation);
-        }
-        
-        localStorage.setItem(STORAGE_KEYS.formations, JSON.stringify(formationsArray));
-      } catch (error) {
-        console.error('Error saving formation to localStorage:', error);
-      }
+      addFormation(generatedFormation);
     }
-  }, [generatedFormation]);
+  }, [generatedFormation, addFormation]);
 
-  // Save dues to localStorage whenever dues change
+  // Save dues to context (automatically persisted)
   useEffect(() => {
     if (dues.length > 0) {
-      try {
-        localStorage.setItem(STORAGE_KEYS.dues, JSON.stringify(dues));
-      } catch (error) {
-        console.error('Error saving dues to localStorage:', error);
-      }
+      setDues(dues);
     }
-  }, [dues]);
+  }, [dues, setDues]);
 
   // Save goalkeepers selection to localStorage
   useEffect(() => {

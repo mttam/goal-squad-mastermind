@@ -12,6 +12,7 @@ import MatchTools from "@/pages/MatchTools";
 import DataExtractor from "@/pages/DataExtractor";
 import Download from "@/pages/Download";
 import Upload from "@/pages/Upload";
+import StorageManagement from "@/pages/StorageManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,13 +25,13 @@ const App = () => (
       <BrowserRouter>
         <FantacalciettoProvider>
           <div className="min-h-screen bg-[#EAEFEF]">
-            <Navigation />            <Routes>
-              <Route path="/" element={<Ranking />} />
+            <Navigation />            <Routes>              <Route path="/" element={<Ranking />} />
               <Route path="/squad-creator" element={<SquadCreator />} />
               <Route path="/match-tools" element={<MatchTools />} />
               <Route path="/data-extractor" element={<DataExtractor />} />
               <Route path="/download" element={<Download />} />
               <Route path="/upload" element={<Upload />} />
+              <Route path="/storage-management" element={<StorageManagement />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
