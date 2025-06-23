@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
@@ -21,6 +22,8 @@ const SquadCreator = () => {
   const [selectedFormation, setSelectedFormation] = useState('');
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [generatedTeams, setGeneratedTeams] = useState<{ teamA: Player[], teamB: Player[] } | null>(null);
+  const [teamAName, setTeamAName] = useState('Team A');
+  const [teamBName, setTeamBName] = useState('Team B');
 
   const modes = [
     { value: '5vs5', label: '5 vs 5', icon: '⚽' },
@@ -102,7 +105,6 @@ const SquadCreator = () => {
     
     setGeneratedTeams(updatedTeams);
   };
-
   const handleSaveSquads = () => {
     if (!generatedTeams) return;
 
@@ -111,7 +113,7 @@ const SquadCreator = () => {
     // Save Team A
     addSquad({
       id: `squad-${Date.now()}-a`,
-      name: `Team A - ${selectedMode}${formationSuffix}`,
+      name: `${teamAName} - ${selectedMode}${formationSuffix}`,
       players: generatedTeams.teamA,
       mode: selectedMode,
       createdAt: new Date(),
@@ -120,7 +122,7 @@ const SquadCreator = () => {
     // Save Team B
     addSquad({
       id: `squad-${Date.now()}-b`,
-      name: `Team B - ${selectedMode}${formationSuffix}`,
+      name: `${teamBName} - ${selectedMode}${formationSuffix}`,
       players: generatedTeams.teamB,
       mode: selectedMode,
       createdAt: new Date(),
@@ -187,9 +189,7 @@ const SquadCreator = () => {
                     <span className="text-sm font-medium">{mode.label}</span>
                   </Button>
                 ))}
-              </div>
-
-              {/* Formation Selection */}
+              </div>              {/* Formation Selection */}
               <div className="space-y-2">
                 <Label htmlFor="formation">Formation (Optional)</Label>
                 <Select value={selectedFormation} onValueChange={setSelectedFormation}>
@@ -204,6 +204,30 @@ const SquadCreator = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Team Names */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="teamAName">Team A Name</Label>
+                  <Input
+                    id="teamAName"
+                    value={teamAName}
+                    onChange={(e) => setTeamAName(e.target.value)}
+                    placeholder="Enter Team A name"
+                    className="text-sm"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="teamBName">Team B Name</Label>
+                  <Input
+                    id="teamBName"
+                    value={teamBName}
+                    onChange={(e) => setTeamBName(e.target.value)}
+                    placeholder="Enter Team B name"
+                    className="text-sm"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -284,11 +308,10 @@ const SquadCreator = () => {
           {/* Generated Teams */}
           {generatedTeams && (
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Team A */}
-              <Card className="bg-white border-[#B8CFCE]">
+              {/* Team A */}              <Card className="bg-white border-[#B8CFCE]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[#333446]">
-                    🔴 Team A
+                    🔴 {teamAName}
                     {selectedFormation && (
                       <span className="text-sm text-[#7F8CAA] ml-auto">
                         Formation: {selectedFormation}
@@ -342,11 +365,10 @@ const SquadCreator = () => {
                 </CardContent>
               </Card>
 
-              {/* Team B */}
-              <Card className="bg-white border-[#B8CFCE]">
+              {/* Team B */}              <Card className="bg-white border-[#B8CFCE]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-[#333446]">
-                    🔵 Team B
+                    🔵 {teamBName}
                     {selectedFormation && (
                       <span className="text-sm text-[#7F8CAA] ml-auto">
                         Formation: {selectedFormation}
