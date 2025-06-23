@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,8 +22,8 @@ const MatchTools = () => {
   const [generatedFormation, setGeneratedFormation] = useState<Formation | null>(null);
   const [generatedDataForLineup, setGeneratedDataForLineup] = useState<{mode: MatchMode, teamA: string, teamB: string} | null>(null);
   const [rotationMode, setRotationMode] = useState<MatchMode>('5vs5');
-  const [selectedGoalkeepers, setSelectedGoalkeepers] = useState<string[]>([]);
-  const [rotationSchedule, setRotationSchedule] = useState<{teamA: {segment: number, goalkeeper: Player}[], teamB: {segment: number, goalkeeper: Player}[]} | null>(null);
+  const [selectedGoalkeepers, setSelectedGoalkeepers] = useState<string[]>([]);  const [rotationSchedule, setRotationSchedule] = useState<{teamA: {segment: number, goalkeeper: Player}[], teamB: {segment: number, goalkeeper: Player}[]} | null>(null);
+  const [draggedPlayer, setDraggedPlayer] = useState<{player: Player, sourceSegment: number, sourceTeam: 'A' | 'B'} | null>(null);
   const [newDue, setNewDue] = useState({
     playerName: '',
     amount: 0,
@@ -324,8 +324,72 @@ const MatchTools = () => {
       title: "Random Rotation Generated! 🔄",
       description: hasFixedGoalkeepers 
         ? `Random goalkeeper rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode using ${rotationSource}`
-        : `Random player rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper randomly`,
+        : `Random player rotations created for each team (${segmentsPerTeam} segments each) in ${rotationMode} mode - all players from ${rotationSource} will rotate as goalkeeper randomly`,    });
+  };
+
+  // Drag and Drop handlers for rotation schedule
+  const handleDragStart = (player: Player, segment: number, team: 'A' | 'B') => {
+    setDraggedPlayer({ player, sourceSegment: segment, sourceTeam: team });
+  };
+  const handleDragOver = (e: any) => {
+    e.preventDefault(); // Allow drop
+  };
+
+  const handleDrop = (e: any, targetSegment: number, targetTeam: 'A' | 'B') => {
+    e.preventDefault();
+    
+    if (!draggedPlayer || !rotationSchedule) return;
+
+    const { player, sourceSegment, sourceTeam } = draggedPlayer;
+
+    // Don't allow drop if source and target are the same
+    if (sourceSegment === targetSegment && sourceTeam === targetTeam) {
+      setDraggedPlayer(null);
+      return;
+    }
+
+    // Create new rotation schedule
+    const newSchedule = { ...rotationSchedule };
+
+    // Find the target player to swap with
+    const targetTeamKey = targetTeam === 'A' ? 'teamA' : 'teamB';
+    const sourceTeamKey = sourceTeam === 'A' ? 'teamA' : 'teamB';
+    
+    const targetPlayer = newSchedule[targetTeamKey].find(item => item.segment === targetSegment)?.goalkeeper;
+    
+    if (targetPlayer) {
+      // Swap players between segments
+      newSchedule[sourceTeamKey] = newSchedule[sourceTeamKey].map(item => 
+        item.segment === sourceSegment 
+          ? { ...item, goalkeeper: targetPlayer }
+          : item
+      );
+      
+      newSchedule[targetTeamKey] = newSchedule[targetTeamKey].map(item => 
+        item.segment === targetSegment 
+          ? { ...item, goalkeeper: player }
+          : item
+      );
+    } else {
+      // Just move the player to the target segment (shouldn't happen with proper segments)
+      newSchedule[targetTeamKey] = newSchedule[targetTeamKey].map(item => 
+        item.segment === targetSegment 
+          ? { ...item, goalkeeper: player }
+          : item
+      );
+    }
+
+    setRotationSchedule(newSchedule);
+    setDraggedPlayer(null);
+
+    toast({
+      title: "Rotation Updated! 🔄",
+      description: `Moved ${player.name} to segment ${targetSegment} in Team ${targetTeam}`,
     });
+  };
+
+  const handleDragEnd = () => {
+    setDraggedPlayer(null);
   };
 
   const handleAddDue = () => {
@@ -806,17 +870,33 @@ const MatchTools = () => {
                     <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationA})</span>
                   )}
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </CardHeader>              <CardContent>
+                <div className="space-y-2 mb-3">
+                  <p className="text-xs text-[#7F8CAA] italic">💡 Drag and drop players between segments to reorder the rotation</p>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {rotationSchedule.teamA.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF] text-sm">
+                    <div 
+                      key={index} 
+                      className={`flex items-center gap-2 p-2 rounded text-sm cursor-move transition-all duration-200 border-2 ${
+                        draggedPlayer?.sourceSegment === item.segment && draggedPlayer?.sourceTeam === 'A'
+                          ? 'bg-blue-100 border-blue-400 shadow-lg scale-105'
+                          : 'bg-[#EAEFEF] border-transparent hover:bg-blue-50 hover:border-blue-200'
+                      }`}
+                      draggable
+                      onDragStart={() => handleDragStart(item.goalkeeper, item.segment, 'A')}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, item.segment, 'A')}
+                      onDragEnd={handleDragEnd}
+                      title="Drag to reorder rotation"
+                    >
                       <span className="font-bold text-[#333446] w-6 text-center">#{item.segment}</span>
                       <span>🥅</span>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-[#333446] truncate">{item.goalkeeper.name}</div>
                         <div className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</div>
                       </div>
+                      <span className="text-xs text-[#7F8CAA]">🖱️</span>
                     </div>
                   ))}
                 </div>
@@ -831,17 +911,33 @@ const MatchTools = () => {
                     <span className="text-sm text-[#7F8CAA] font-normal ml-2">({selectedFormationB})</span>
                   )}
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
+              </CardHeader>              <CardContent>
+                <div className="space-y-2 mb-3">
+                  <p className="text-xs text-[#7F8CAA] italic">💡 Drag and drop players between segments to reorder the rotation</p>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                   {rotationSchedule.teamB.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 rounded bg-[#EAEFEF] text-sm">
+                    <div 
+                      key={index} 
+                      className={`flex items-center gap-2 p-2 rounded text-sm cursor-move transition-all duration-200 border-2 ${
+                        draggedPlayer?.sourceSegment === item.segment && draggedPlayer?.sourceTeam === 'B'
+                          ? 'bg-red-100 border-red-400 shadow-lg scale-105'
+                          : 'bg-[#EAEFEF] border-transparent hover:bg-red-50 hover:border-red-200'
+                      }`}
+                      draggable
+                      onDragStart={() => handleDragStart(item.goalkeeper, item.segment, 'B')}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, item.segment, 'B')}
+                      onDragEnd={handleDragEnd}
+                      title="Drag to reorder rotation"
+                    >
                       <span className="font-bold text-[#333446] w-6 text-center">#{item.segment}</span>
                       <span>🥅</span>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-[#333446] truncate">{item.goalkeeper.name}</div>
                         <div className="text-xs text-[#7F8CAA]">({item.goalkeeper.position})</div>
                       </div>
+                      <span className="text-xs text-[#7F8CAA]">🖱️</span>
                     </div>
                   ))}
                 </div>
