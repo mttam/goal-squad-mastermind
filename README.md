@@ -5,7 +5,6 @@
 ## 🚀 Project Overview
 
 **Live Demo**: https://fantacalcettto.netlify.app/
-**Lovable Project**: https://lovable.dev/projects/6f678740-80b4-48a9-9a26-41ff4baa0090
 
 • **Type**: Football/Soccer team management system
 • **Purpose**: Streamline team organization, formation planning, and player management
