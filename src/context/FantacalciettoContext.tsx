@@ -156,16 +156,19 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
     };
 
     loadData();
-  }, [setPlayers, setSquads, setFormations, setDues]);
-  const addSquad = useCallback((squad: Squad) => {
+  }, [setPlayers, setSquads, setFormations, setDues]);  const addSquad = useCallback((squad: Squad) => {
     setSquadsState(prev => {
       const updated = [...prev, squad];
       console.log('Adding squad:', squad);
       console.log('Updated squads:', updated);
+      // Save to localStorage with the updated array
+      const result = LocalStorageManager.save(STORAGE_KEYS.squads, updated, DataValidators.isSquadsArray);
+      if (!result.success) {
+        setStorageErrors(prevErrors => [...prevErrors, `Failed to save squads: ${result.error?.message}`]);
+      }
       return updated;
     });
-    setSquads(prev => [...prev, squad]);
-  }, [setSquads]);
+  }, []);
 
   const addFormation = useCallback((formation: Formation) => {
     setFormations(prev => [...prev, formation]);

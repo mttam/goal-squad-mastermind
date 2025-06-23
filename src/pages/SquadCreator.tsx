@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,7 +16,7 @@ import ManualTeamCreator from '@/components/ManualTeamCreator';
 import SquadImporter from '@/components/SquadImporter';
 
 const SquadCreator = () => {
-  const { players, addSquad, replacePlayerInSquad } = useFantacalcietto();
+  const { players, addSquad, replacePlayerInSquad, squads } = useFantacalcietto();
   const { toast } = useToast();
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedFormation, setSelectedFormation] = useState('');
@@ -24,6 +24,11 @@ const SquadCreator = () => {
   const [generatedTeams, setGeneratedTeams] = useState<{ teamA: Player[], teamB: Player[] } | null>(null);
   const [teamAName, setTeamAName] = useState('Team A');
   const [teamBName, setTeamBName] = useState('Team B');
+
+  // Debug logging
+  useEffect(() => {
+    console.log('SquadCreator - Current squads:', squads);
+  }, [squads]);
 
   const modes = [
     { value: '5vs5', label: '5 vs 5', icon: '⚽' },
@@ -104,29 +109,34 @@ const SquadCreator = () => {
     }
     
     setGeneratedTeams(updatedTeams);
-  };
-  const handleSaveSquads = () => {
+  };  const handleSaveSquads = () => {
     if (!generatedTeams) return;
 
     const formationSuffix = selectedFormation ? ` (${selectedFormation})` : '';
 
+    console.log('Saving squads...', { teamAName, teamBName, selectedMode, selectedFormation });
+
     // Save Team A
-    addSquad({
+    const squadA = {
       id: `squad-${Date.now()}-a`,
       name: `${teamAName} - ${selectedMode}${formationSuffix}`,
       players: generatedTeams.teamA,
       mode: selectedMode,
       createdAt: new Date(),
-    });
+    };
+    console.log('Squad A to save:', squadA);
+    addSquad(squadA);
 
     // Save Team B
-    addSquad({
+    const squadB = {
       id: `squad-${Date.now()}-b`,
       name: `${teamBName} - ${selectedMode}${formationSuffix}`,
       players: generatedTeams.teamB,
       mode: selectedMode,
       createdAt: new Date(),
-    });
+    };
+    console.log('Squad B to save:', squadB);
+    addSquad(squadB);
 
     toast({
       title: "Squads Saved! 💾",
