@@ -13,8 +13,7 @@ const Navigation = () => {
     { path: '/match-tools', label: 'Match Tools', icon: '🔧' },
     { path: '/data-extractor', label: 'Data Extractor', icon: '📊' },
     { path: '/download', label: 'Download', icon: '📥' },
-    { path: '/upload', label: 'Upload', icon: '📤' },
-    { path: '/storage-management', label: 'Storage', icon: '🔧' },
+    { path: '/upload', label: 'Upload', icon: '📤' }
   ];
 
   const NavLink = ({ item, onClick }: { item: typeof navItems[0], onClick?: () => void }) => (
