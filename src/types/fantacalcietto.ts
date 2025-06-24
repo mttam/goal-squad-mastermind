@@ -1,4 +1,3 @@
-
 export interface Player {
   id: string;
   name: string;
@@ -36,6 +35,17 @@ export interface Due {
   rest?: number; // Amount still owed
   actualPaid?: number; // Actual amount received
   change?: number; // Change to give back
+}
+
+export interface SavedRotation {
+  id: string;
+  name: string;
+  mode: MatchMode;
+  formationId: string;
+  formationName: string;
+  teamA: {segment: number, goalkeeper: Player}[];
+  teamB: {segment: number, goalkeeper: Player}[];
+  createdAt: Date;
 }
 
 export type MatchMode = '5vs5' | '6vs6' | '7vs7' | '8vs8';
