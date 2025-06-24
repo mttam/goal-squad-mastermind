@@ -31,7 +31,6 @@ const App = () => (
               <Route path="/data-extractor" element={<DataExtractor />} />
               <Route path="/download" element={<Download />} />
               <Route path="/upload" element={<Upload />} />
-              <Route path="/storage-management" element={<StorageManagement />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
