@@ -52,7 +52,8 @@ const MatchTools = () => {
   };
   // Local storage keys (legacy - now handled by context)
   const STORAGE_KEYS = {
-    goalkeepers: 'fantacalcietto-goalkeepers'
+    goalkeepers: 'fantacalcietto-goalkeepers',
+    rotationSchedule: 'fantacalcietto-rotation-schedule'
   };
 
   // Load data from localStorage on component mount
@@ -63,8 +64,14 @@ const MatchTools = () => {
       if (savedGoalkeepers) {
         setSelectedGoalkeepers(JSON.parse(savedGoalkeepers));
       }
+
+      // Load saved rotation schedule
+      const savedRotationSchedule = localStorage.getItem(STORAGE_KEYS.rotationSchedule);
+      if (savedRotationSchedule) {
+        setRotationSchedule(JSON.parse(savedRotationSchedule));
+      }
     } catch (error) {
-      console.error('Error loading goalkeepers from localStorage:', error);
+      console.error('Error loading data from localStorage:', error);
     }
   }, []);
 
@@ -540,7 +547,70 @@ const MatchTools = () => {
     }
   };
 
-  // ...existing code...
+  const handleSaveRotationSchedule = () => {
+    if (!rotationSchedule) {
+      toast({
+        title: "No Rotation to Save ❌",
+        description: "Please generate a rotation schedule first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEYS.rotationSchedule, JSON.stringify(rotationSchedule));
+      toast({
+        title: "Rotation Saved! 💾",
+        description: "Rotation schedule has been saved to localStorage",
+      });
+    } catch (error) {
+      console.error('Error saving rotation schedule to localStorage:', error);
+      toast({
+        title: "Save Failed ❌",
+        description: "Failed to save rotation schedule",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLoadRotationSchedule = () => {
+    try {
+      const savedRotationSchedule = localStorage.getItem(STORAGE_KEYS.rotationSchedule);
+      if (savedRotationSchedule) {
+        setRotationSchedule(JSON.parse(savedRotationSchedule));
+        toast({
+          title: "Rotation Loaded! 📥",
+          description: "Rotation schedule has been loaded from localStorage",
+        });
+      } else {
+        toast({
+          title: "No Saved Rotation ❌",
+          description: "No rotation schedule found in localStorage",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error loading rotation schedule from localStorage:', error);
+      toast({
+        title: "Load Failed ❌",
+        description: "Failed to load rotation schedule",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearRotationSchedule = () => {
+    setRotationSchedule(null);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.rotationSchedule);
+      toast({
+        title: "Rotation Cleared! 🗑️",
+        description: "Rotation schedule has been cleared",
+      });
+    } catch (error) {
+      console.error('Error clearing rotation schedule from localStorage:', error);
+    }
+  };
 
   const financialSummary = calculateFinancialSummary();
 
@@ -841,9 +911,7 @@ const MatchTools = () => {
                   })}
               </div>
             )}
-          </div>
-
-          <Button 
+          </div>          <Button 
             onClick={handleGenerateRotation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
             disabled={(generatedFormation 
@@ -864,6 +932,32 @@ const MatchTools = () => {
               </span>
             )}
           </Button>
+
+          {/* Rotation Management Buttons */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={handleSaveRotationSchedule}
+              className="bg-green-600 text-white hover:bg-green-700"
+              disabled={!rotationSchedule}
+              title={rotationSchedule ? "Save current rotation to localStorage" : "Generate a rotation first"}
+            >
+              Save Rotation 💾
+            </Button>
+            <Button 
+              onClick={handleLoadRotationSchedule}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Load Rotation 📥
+            </Button>
+            <Button 
+              onClick={handleClearRotationSchedule}
+              className="bg-red-600 text-white hover:bg-red-700"
+              disabled={!rotationSchedule}
+              title={rotationSchedule ? "Clear current rotation" : "No rotation to clear"}
+            >
+              Clear Rotation 🗑️
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
