@@ -175,14 +175,21 @@ const MatchTools = () => {
 
     setGeneratedFormation(formation);
     setGeneratedDataForLineup(generatedDataForLineup);
-    addFormation(formation);
-
-    // Auto-sync rotation mode with formation mode
+    addFormation(formation);    // Auto-sync rotation mode with formation mode
     setRotationMode(selectedMode);
+
+    // Check for existing saved rotations for this formation or similar formations
+    const matchingRotations = savedRotations.filter(rotation => 
+      rotation.formationName === formation.name || 
+      (rotation.mode === formation.mode && 
+       rotation.formationName.includes(squadA.name) && 
+       rotation.formationName.includes(squadB.name))
+    );
 
     // Debug: Log both formation structures
     console.log('🔍 Generated Formation (Full):', formation);
     console.log('🔍 Generated Data for LineupBuilder:', generatedDataForLineup);
+    console.log('🔍 Matching Saved Rotations:', matchingRotations);
     console.log('🔍 Formation Details:', {
       id: formation.id,
       name: formation.name,
@@ -194,8 +201,21 @@ const MatchTools = () => {
 
     toast({
       title: "Formation Created! ⚽",
-      description: `Match formation for ${selectedMode} mode is ready`,
+      description: `Match formation for ${selectedMode} mode is ready${matchingRotations.length > 0 ? ` (${matchingRotations.length} saved rotation${matchingRotations.length > 1 ? 's' : ''} available)` : ''}`,
     });
+
+    // Auto-load most recent saved rotation if available
+    if (matchingRotations.length > 0) {
+      const mostRecentRotation = matchingRotations.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0];
+      
+      // Optional: Auto-load the most recent rotation
+      // Uncomment the line below if you want to automatically load the most recent rotation
+      // handleLoadSavedRotation(mostRecentRotation);
+      
+      console.log('🔄 Most recent rotation available:', mostRecentRotation.name);
+    }
   };
 
   const handleGoalkeeperSelection = (playerId: string, checked: boolean) => {
@@ -407,6 +427,42 @@ const MatchTools = () => {
     });
   };
 
+  const handleLoadSavedRotation = (savedRotation: SavedRotation) => {
+    // Set the rotation schedule from saved rotation
+    setRotationSchedule({
+      teamA: savedRotation.teamA,
+      teamB: savedRotation.teamB
+    });
+    
+    // Update rotation mode to match saved rotation
+    setRotationMode(savedRotation.mode);
+    
+    // Try to find and set the corresponding formation if it exists
+    const matchingFormation = formations.find(f => f.id === savedRotation.formationId);
+    if (matchingFormation) {
+      setGeneratedFormation(matchingFormation);
+      setGeneratedDataForLineup({
+        mode: matchingFormation.mode,
+        teamA: selectedFormationA || '3-1', // Use current or default formation
+        teamB: selectedFormationB || '3-1'
+      });
+    }
+
+    toast({
+      title: "Rotation Loaded! 🔄",
+      description: `Loaded rotation: ${savedRotation.name}`,
+    });
+  };
+
+  const getAvailableRotationsForCurrentFormation = () => {
+    if (!generatedFormation) return [];
+    
+    return savedRotations.filter(rotation => 
+      rotation.formationId === generatedFormation.id || 
+      rotation.mode === generatedFormation.mode
+    );
+  };
+
   const handleDragEnd = () => {
     setDraggedPlayer(null);
   };
@@ -574,6 +630,8 @@ const MatchTools = () => {
     }
   };
 
+  // ...existing code...
+
   const financialSummary = calculateFinancialSummary();
 
   return (
@@ -713,6 +771,47 @@ const MatchTools = () => {
           >
             Generate Formation 📋
           </Button>
+
+          {/* Quick Load Saved Rotation for Selected Squads */}
+          {selectedSquadA && selectedSquadB && (() => {
+            const squadA = squads.find(s => s.id === selectedSquadA);
+            const squadB = squads.find(s => s.id === selectedSquadB);
+            if (!squadA || !squadB) return null;
+            
+            const matchingRotations = savedRotations.filter(rotation => 
+              rotation.mode === selectedMode && 
+              rotation.formationName.includes(squadA.name) && 
+              rotation.formationName.includes(squadB.name)
+            );
+            
+            if (matchingRotations.length === 0) return null;
+            
+            const mostRecentRotation = matchingRotations.sort((a, b) => 
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )[0];
+            
+            return (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-green-800">
+                      🔄 Found Saved Rotation
+                    </p>
+                    <p className="text-xs text-green-600">
+                      {mostRecentRotation.name}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handleLoadSavedRotation(mostRecentRotation)}
+                    className="bg-green-600 text-white hover:bg-green-700"
+                  >
+                    Quick Load 🚀
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 
@@ -921,6 +1020,41 @@ const MatchTools = () => {
               💾 Save Rotation Schedule
             </Button>
           </div>
+
+          {/* Available Saved Rotations for Current Formation */}
+          {generatedFormation && getAvailableRotationsForCurrentFormation().length > 0 && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-blue-800">
+                  🔄 Available Saved Rotations ({getAvailableRotationsForCurrentFormation().length})
+                </CardTitle>
+                <p className="text-xs text-blue-600">
+                  Click to load a previously saved rotation for this formation or mode
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2">
+                  {getAvailableRotationsForCurrentFormation().map((rotation) => (
+                    <div key={rotation.id} className="flex items-center justify-between p-2 bg-white rounded border border-blue-200">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-900">{rotation.name}</p>
+                        <p className="text-xs text-blue-600">
+                          {rotation.mode} mode • Created: {rotation.createdAt.toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleLoadSavedRotation(rotation)}
+                        className="bg-blue-600 text-white hover:bg-blue-700 text-xs px-2 py-1"
+                      >
+                        Load 🔄
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="bg-white border-[#B8CFCE]">
@@ -1264,7 +1398,7 @@ const MatchTools = () => {
                         className="bg-red-600 text-white hover:bg-red-700 text-xs flex-1"
                       >
                         Delete
-                      </Button>
+                        </Button>
                     </div>
                   </div>
                 ))}
