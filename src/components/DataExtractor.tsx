@@ -229,7 +229,6 @@ const DataExtractor = () => {
                               value={player.goals}
                               onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
                               className="w-20 h-8 text-center"
-                              min="0"
                             />
                           </TableCell>
                           <TableCell>
@@ -238,7 +237,6 @@ const DataExtractor = () => {
                               value={player.assists}
                               onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
                               className="w-20 h-8 text-center"
-                              min="0"
                             />
                           </TableCell>
                           <TableCell>
@@ -247,7 +245,6 @@ const DataExtractor = () => {
                               value={player.saves}
                               onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
                               className="w-20 h-8 text-center"
-                              min="0"
                             />
                           </TableCell>
                           <TableCell>
@@ -256,7 +253,6 @@ const DataExtractor = () => {
                               value={player.defenderVoting}
                               onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
                               className="w-20 h-8 text-center"
-                              min="1"
                               max="10"
                               step="0.1"
                             />
