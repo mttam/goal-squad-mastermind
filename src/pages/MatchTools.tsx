@@ -170,25 +170,16 @@ const MatchTools = () => {
       mode: selectedMode,
       teamA: selectedFormationA,
       teamB: selectedFormationB
-    };
-
-    setGeneratedFormation(formation);
+    };    setGeneratedFormation(formation);
     setGeneratedDataForLineup(generatedDataForLineup);
-    addFormation(formation);    // Auto-sync rotation mode with formation mode
-    setRotationMode(selectedMode);
+    addFormation(formation);
 
-    // Check for existing saved rotations for this formation or similar formations
-    const matchingRotations = savedRotations.filter(rotation => 
-      rotation.formationName === formation.name || 
-      (rotation.mode === formation.mode && 
-       rotation.formationName.includes(squadA.name) && 
-       rotation.formationName.includes(squadB.name))
-    );
+    // Auto-sync rotation mode with formation mode
+    setRotationMode(selectedMode);
 
     // Debug: Log both formation structures
     console.log('🔍 Generated Formation (Full):', formation);
     console.log('🔍 Generated Data for LineupBuilder:', generatedDataForLineup);
-    console.log('🔍 Matching Saved Rotations:', matchingRotations);
     console.log('🔍 Formation Details:', {
       id: formation.id,
       name: formation.name,
@@ -200,21 +191,8 @@ const MatchTools = () => {
 
     toast({
       title: "Formation Created! ⚽",
-      description: `Match formation for ${selectedMode} mode is ready${matchingRotations.length > 0 ? ` (${matchingRotations.length} saved rotation${matchingRotations.length > 1 ? 's' : ''} available)` : ''}`,
+      description: `Match formation for ${selectedMode} mode is ready`,
     });
-
-    // Auto-load most recent saved rotation if available
-    if (matchingRotations.length > 0) {
-      const mostRecentRotation = matchingRotations.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0];
-      
-      // Optional: Auto-load the most recent rotation
-      // Uncomment the line below if you want to automatically load the most recent rotation
-      // handleLoadSavedRotation(mostRecentRotation);
-      
-      console.log('🔄 Most recent rotation available:', mostRecentRotation.name);
-    }
   };
 
   const handleGoalkeeperSelection = (playerId: string, checked: boolean) => {
@@ -389,42 +367,9 @@ const MatchTools = () => {
     }
 
     setRotationSchedule(newSchedule);
-    setDraggedPlayer(null);
-
-    toast({
+    setDraggedPlayer(null);    toast({
       title: "Rotation Updated! 🔄",
       description: `Moved ${player.name} to segment ${targetSegment} in Team ${targetTeam}`,
-    });
-  };
-
-  const handleSaveRotation = () => {
-    if (!rotationSchedule || !generatedFormation) {
-      toast({
-        title: "Cannot Save Rotation ❌",
-        description: "Please generate a rotation schedule first",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const rotationName = `${generatedFormation.name} - Rotation`;
-    
-    const savedRotation: SavedRotation = {
-      id: `rotation-${Date.now()}`,
-      name: rotationName,
-      mode: rotationMode,
-      formationId: generatedFormation.id,
-      formationName: generatedFormation.name,
-      teamA: rotationSchedule.teamA,
-      teamB: rotationSchedule.teamB,
-      createdAt: new Date(),
-    };
-
-    addSavedRotation(savedRotation);
-
-    toast({
-      title: "Rotation Saved! 💾",
-      description: `Rotation "${rotationName}" has been saved successfully`,
     });
   };
 
@@ -727,56 +672,13 @@ const MatchTools = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <Button 
+          </div>          <Button 
             onClick={handleGenerateFormation}
             className="bg-[#333446] text-white hover:bg-[#7F8CAA]"
             disabled={!selectedSquadA || !selectedSquadB || !selectedFormationA || !selectedFormationB}
           >
             Generate Formation 📋
           </Button>
-
-          {/* Quick Load Saved Rotation for Selected Squads */}
-          {selectedSquadA && selectedSquadB && (() => {
-            const squadA = squads.find(s => s.id === selectedSquadA);
-            const squadB = squads.find(s => s.id === selectedSquadB);
-            if (!squadA || !squadB) return null;
-            
-            const matchingRotations = savedRotations.filter(rotation => 
-              rotation.mode === selectedMode && 
-              rotation.formationName.includes(squadA.name) && 
-              rotation.formationName.includes(squadB.name)
-            );
-            
-            if (matchingRotations.length === 0) return null;
-            
-            const mostRecentRotation = matchingRotations.sort((a, b) => 
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            )[0];
-            
-            return (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-800">
-                      🔄 Found Saved Rotation
-                    </p>
-                    <p className="text-xs text-green-600">
-                      {mostRecentRotation.name}
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleLoadSavedRotation(mostRecentRotation)}
-                    className="bg-green-600 text-white hover:bg-green-700"
-                  >
-                    Quick Load 🚀
-                  </Button>
-                </div>
-              </div>
-            );
-          })()}
         </CardContent>
       </Card>
 
@@ -972,20 +874,8 @@ const MatchTools = () => {
             <div className="text-center p-3 bg-[#EAEFEF] rounded-lg">
               <h3 className="font-medium text-[#333446]">Rotation Schedule for:</h3>
               <p className="text-sm text-[#7F8CAA]">{generatedFormation.name}</p>
-              <p className="text-xs text-[#7F8CAA] mt-1">Mode: {rotationMode}</p>
-            </div>
+              <p className="text-xs text-[#7F8CAA] mt-1">Mode: {rotationMode}</p>            </div>
           )}
-          
-          {/* Save Rotation Button */}
-          <div className="flex justify-center">
-            <Button 
-              onClick={handleSaveRotation}
-              className="bg-green-600 text-white hover:bg-green-700"
-              disabled={!rotationSchedule || !generatedFormation}
-            >
-              💾 Save Rotation Schedule
-            </Button>
-          </div>
           
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="bg-white border-[#B8CFCE]">
