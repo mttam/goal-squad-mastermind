@@ -6,25 +6,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
-import { Player, Squad, Formation, Due, MatchMode, SavedRotation } from '@/types/fantacalcietto';
+import { Player, Squad, Formation, Due, MatchMode } from '@/types/fantacalcietto';
 import { useToast } from '@/hooks/use-toast';
 import LineupBuilder from '@/components/LineupBuilder';
 
 const MatchTools = () => {
-  const { players, squads, formations, dues, savedRotations, addFormation, addDue, updateDue, setDues, addSavedRotation } = useFantacalcietto();
+  const { players, squads, formations, dues, addFormation, addDue, updateDue, setDues } = useFantacalcietto();
   const { toast } = useToast();
+
   // Debug logging
   useEffect(() => {
     console.log('MatchTools - Current data:', {
       players: players.length,
       squads: squads.length,
       formations: formations.length,
-      dues: dues.length,
-      savedRotations: savedRotations.length
+      dues: dues.length
     });
     console.log('MatchTools - Squads:', squads);
-    console.log('MatchTools - Saved Rotations:', savedRotations);
-  }, [players, squads, formations, dues, savedRotations]);
+  }, [players, squads, formations, dues]);
 
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedSquadA, setSelectedSquadA] = useState('');
@@ -390,7 +389,9 @@ const MatchTools = () => {
     }
 
     setRotationSchedule(newSchedule);
-    setDraggedPlayer(null);    toast({
+    setDraggedPlayer(null);
+
+    toast({
       title: "Rotation Updated! 🔄",
       description: `Moved ${player.name} to segment ${targetSegment} in Team ${targetTeam}`,
     });
@@ -425,42 +426,6 @@ const MatchTools = () => {
       title: "Rotation Saved! 💾",
       description: `Rotation "${rotationName}" has been saved successfully`,
     });
-  };
-
-  const handleLoadSavedRotation = (savedRotation: SavedRotation) => {
-    // Set the rotation schedule from saved rotation
-    setRotationSchedule({
-      teamA: savedRotation.teamA,
-      teamB: savedRotation.teamB
-    });
-    
-    // Update rotation mode to match saved rotation
-    setRotationMode(savedRotation.mode);
-    
-    // Try to find and set the corresponding formation if it exists
-    const matchingFormation = formations.find(f => f.id === savedRotation.formationId);
-    if (matchingFormation) {
-      setGeneratedFormation(matchingFormation);
-      setGeneratedDataForLineup({
-        mode: matchingFormation.mode,
-        teamA: selectedFormationA || '3-1', // Use current or default formation
-        teamB: selectedFormationB || '3-1'
-      });
-    }
-
-    toast({
-      title: "Rotation Loaded! 🔄",
-      description: `Loaded rotation: ${savedRotation.name}`,
-    });
-  };
-
-  const getAvailableRotationsForCurrentFormation = () => {
-    if (!generatedFormation) return [];
-    
-    return savedRotations.filter(rotation => 
-      rotation.formationId === generatedFormation.id || 
-      rotation.mode === generatedFormation.mode
-    );
   };
 
   const handleDragEnd = () => {
@@ -1001,7 +966,8 @@ const MatchTools = () => {
       </Card>
 
       {/* Rotation Schedule display */}
-      {rotationSchedule && (        <div className="space-y-4">
+      {rotationSchedule && (
+        <div className="space-y-4">
           {generatedFormation && (
             <div className="text-center p-3 bg-[#EAEFEF] rounded-lg">
               <h3 className="font-medium text-[#333446]">Rotation Schedule for:</h3>
@@ -1020,41 +986,6 @@ const MatchTools = () => {
               💾 Save Rotation Schedule
             </Button>
           </div>
-
-          {/* Available Saved Rotations for Current Formation */}
-          {generatedFormation && getAvailableRotationsForCurrentFormation().length > 0 && (
-            <Card className="bg-blue-50 border-blue-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-blue-800">
-                  🔄 Available Saved Rotations ({getAvailableRotationsForCurrentFormation().length})
-                </CardTitle>
-                <p className="text-xs text-blue-600">
-                  Click to load a previously saved rotation for this formation or mode
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-2">
-                  {getAvailableRotationsForCurrentFormation().map((rotation) => (
-                    <div key={rotation.id} className="flex items-center justify-between p-2 bg-white rounded border border-blue-200">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-900">{rotation.name}</p>
-                        <p className="text-xs text-blue-600">
-                          {rotation.mode} mode • Created: {rotation.createdAt.toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleLoadSavedRotation(rotation)}
-                        className="bg-blue-600 text-white hover:bg-blue-700 text-xs px-2 py-1"
-                      >
-                        Load 🔄
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
           
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="bg-white border-[#B8CFCE]">
@@ -1158,62 +1089,6 @@ const MatchTools = () => {
               <p className="text-sm text-[#7F8CAA]">
                 Use the Formation Generator above to create a formation and see the interactive lineup
               </p>
-            </div>
-          </CardContent>        </Card>
-      )}
-
-      {/* Saved Rotations section */}
-      {savedRotations && savedRotations.length > 0 && (
-        <Card className="bg-white border-[#B8CFCE]">
-          <CardHeader>
-            <CardTitle className="text-[#333446]">Saved Rotation Schedules 📋</CardTitle>
-            <p className="text-sm text-[#7F8CAA]">
-              Previously saved rotation schedules ({savedRotations.length} total)
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              {savedRotations.map((rotation) => (
-                <div key={rotation.id} className="bg-[#EAEFEF] p-4 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h3 className="font-medium text-[#333446]">{rotation.name}</h3>
-                      <p className="text-sm text-[#7F8CAA]">
-                        Mode: {rotation.mode} | Created: {new Date(rotation.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className="text-2xl">🔄</span>
-                  </div>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium text-[#333446] mb-2">🔴 Team A</h4>
-                      <div className="space-y-1">
-                        {rotation.teamA.map((item, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <span className="font-bold text-[#333446] w-6">#{item.segment}</span>
-                            <span>🥅</span>
-                            <span className="flex-1">{item.goalkeeper.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-[#333446] mb-2">🔵 Team B</h4>
-                      <div className="space-y-1">
-                        {rotation.teamB.map((item, index) => (
-                          <div key={index} className="flex items-center gap-2 text-sm">
-                            <span className="font-bold text-[#333446] w-6">#{item.segment}</span>
-                            <span>🥅</span>
-                            <span className="flex-1">{item.goalkeeper.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>

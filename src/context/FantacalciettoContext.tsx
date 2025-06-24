@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import { Player, Squad, Formation, Due, MatchMode, SavedRotation } from '@/types/fantacalcietto';
+import { Player, Squad, Formation, Due, MatchMode } from '@/types/fantacalcietto';
 import { generateFakeData } from '@/utils/fakeData';
 import { LocalStorageManager, STORAGE_KEYS, DataValidators, StorageError } from '@/utils/localStorage';
 
@@ -9,16 +9,13 @@ interface FantacalciettoContextType {
   squads: Squad[];
   formations: Formation[];
   dues: Due[];
-  savedRotations: SavedRotation[];
   setPlayers: (players: Player[]) => void;
   setSquads: (squads: Squad[]) => void;
   setFormations: (formations: Formation[]) => void;
   setDues: (dues: Due[]) => void;
-  setSavedRotations: (rotations: SavedRotation[]) => void;
   addSquad: (squad: Squad) => void;
   addFormation: (formation: Formation) => void;
   addDue: (due: Due) => void;
-  addSavedRotation: (rotation: SavedRotation) => void;
   updateDue: (id: string, updates: Partial<Due>) => void;
   addPlayer: (player: Player) => void;
   updatePlayer: (id: string, updates: Partial<Player>) => void;
@@ -47,7 +44,6 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
   const [squads, setSquadsState] = useState<Squad[]>([]);
   const [formations, setFormationsState] = useState<Formation[]>([]);
   const [dues, setDuesState] = useState<Due[]>([]);
-  const [savedRotations, setSavedRotationsState] = useState<SavedRotation[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [storageErrors, setStorageErrors] = useState<string[]>([]);
 
@@ -75,21 +71,12 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
       setStorageErrors(prev => [...prev, `Failed to save formations: ${result.error?.message}`]);
     }
   }, []);
+
   const setDues = useCallback((newDues: Due[]) => {
     setDuesState(newDues);
     const result = LocalStorageManager.save(STORAGE_KEYS.dues, newDues, DataValidators.isDuesArray);
     if (!result.success) {
       setStorageErrors(prev => [...prev, `Failed to save dues: ${result.error?.message}`]);
-    }
-  }, []);
-
-  const setSavedRotations = useCallback((newRotations: SavedRotation[]) => {
-    setSavedRotationsState(newRotations);
-    // For now, save to localStorage with a simple key since we don't have a specific validator yet
-    try {
-      localStorage.setItem('fantacalcietto-savedRotations', JSON.stringify(newRotations));
-    } catch (error) {
-      setStorageErrors(prev => [...prev, `Failed to save rotations: ${error}`]);
     }
   }, []);
 
@@ -143,7 +130,9 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
           }
         } else if (formationsResult.error) {
           setStorageErrors(prev => [...prev, `Formations load error: ${formationsResult.error?.message}`]);
-        }        // Load dues
+        }
+
+        // Load dues
         const duesResult = LocalStorageManager.load<Due[]>(STORAGE_KEYS.dues, DataValidators.isDuesArray);
         if (duesResult.success && duesResult.data) {
           setDuesState(duesResult.data);
@@ -152,17 +141,6 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
           }
         } else if (duesResult.error) {
           setStorageErrors(prev => [...prev, `Dues load error: ${duesResult.error?.message}`]);
-        }
-
-        // Load saved rotations
-        try {
-          const savedRotationsData = localStorage.getItem('fantacalcietto-savedRotations');
-          if (savedRotationsData) {
-            const parsedRotations = JSON.parse(savedRotationsData) as SavedRotation[];
-            setSavedRotationsState(parsedRotations);
-          }
-        } catch (error) {
-          setStorageErrors(prev => [...prev, `Saved rotations load error: ${error}`]);
         }
 
       } catch (error) {
@@ -195,13 +173,10 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
   const addFormation = useCallback((formation: Formation) => {
     setFormations(prev => [...prev, formation]);
   }, [setFormations]);
+
   const addDue = useCallback((due: Due) => {
     setDues(prev => [...prev, due]);
   }, [setDues]);
-
-  const addSavedRotation = useCallback((rotation: SavedRotation) => {
-    setSavedRotations(prev => [...prev, rotation]);
-  }, [setSavedRotations]);
 
   const updateDue = useCallback((id: string, updates: Partial<Due>) => {
     setDues(prev => prev.map(due => due.id === id ? { ...due, ...updates } : due));
@@ -233,17 +208,17 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
   const getStorageHealth = useCallback(() => {
     return LocalStorageManager.getStorageInfo();
   }, []);
+
   const exportAllData = useCallback(() => {
     return {
       players,
       squads,
       formations,
       dues,
-      savedRotations,
       exportedAt: new Date().toISOString(),
       version: '1.0.0'
     };
-  }, [players, squads, formations, dues, savedRotations]);
+  }, [players, squads, formations, dues]);
 
   const importAllData = useCallback(async (data: any): Promise<boolean> => {
     try {
@@ -272,59 +247,53 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
         setFormations(data.formations);
       } else if (data.formations) {
         errors.push('Invalid formations data format');
-      }      // Validate and import dues
+      }
+
+      // Validate and import dues
       if (data.dues && DataValidators.isDuesArray(data.dues)) {
         setDues(data.dues);
       } else if (data.dues) {
         errors.push('Invalid dues data format');
       }
 
-      // Validate and import saved rotations
-      if (data.savedRotations && Array.isArray(data.savedRotations)) {
-        setSavedRotations(data.savedRotations);
-      } else if (data.savedRotations) {
-        errors.push('Invalid saved rotations data format');
-      }
-
       if (errors.length > 0) {
         setStorageErrors(prev => [...prev, ...errors]);
         return false;
-      }      return true;
+      }
+
+      return true;
     } catch (error) {
       setStorageErrors(prev => [...prev, `Import failed: ${error}`]);
       return false;
     }
-  }, [setPlayers, setSquads, setFormations, setDues, setSavedRotations]);
+  }, [setPlayers, setSquads, setFormations, setDues]);
+
   const clearAllData = useCallback(() => {
     try {
       LocalStorageManager.clearAll();
-      localStorage.removeItem('fantacalcietto-savedRotations');
       setPlayersState([]);
       setSquadsState([]);
       setFormationsState([]);
       setDuesState([]);
-      setSavedRotationsState([]);
       setStorageErrors([]);
     } catch (error) {
       setStorageErrors(prev => [...prev, `Clear data failed: ${error}`]);
     }
   }, []);
+
   return (
     <FantacalciettoContext.Provider value={{
       players,
       squads,
       formations,
       dues,
-      savedRotations,
       setPlayers,
       setSquads,
       setFormations,
       setDues,
-      setSavedRotations,
       addSquad,
       addFormation,
       addDue,
-      addSavedRotation,
       updateDue,
       addPlayer,
       updatePlayer,
