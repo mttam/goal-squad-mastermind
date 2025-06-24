@@ -44,14 +44,47 @@ const DataExtractor = () => {
       setIsEditing(true);
     }
   };
+  const validateAndUpdatePlayerStat = (playerId: string, field: keyof Player, value: string | number) => {
+    let numericValue: number;
+    
+    if (typeof value === 'string') {
+      // Remove any non-numeric characters except decimal point and minus sign
+      const cleanValue = value.replace(/[^0-9.-]/g, '');
+      numericValue = parseFloat(cleanValue);
+      
+      // Handle special validation cases
+      if (isNaN(numericValue)) {
+        numericValue = 0;
+      } else {
+        // Apply field-specific validation
+        switch (field) {
+          case 'goals':
+          case 'assists':
+          case 'saves':
+            // These fields should not be negative
+            numericValue = Math.max(0, numericValue);
+            break;
+          case 'defenderVoting':
+            // Voting should be between 1 and 10
+            numericValue = Math.min(10, Math.max(1, numericValue));
+            break;
+          default:
+            break;
+        }
+      }
+    } else {
+      numericValue = value;
+    }
 
-  const updatePlayerStat = (playerId: string, field: keyof Player, value: string | number) => {
     setExtractedPlayers(prev => prev.map(player => 
       player.id === playerId 
-        ? { ...player, [field]: typeof value === 'string' ? parseFloat(value) || 0 : value }
+        ? { ...player, [field]: numericValue }
         : player
     ));
   };
+
+  // Legacy function for backward compatibility
+  const updatePlayerStat = validateAndUpdatePlayerStat;
   const downloadCSV = () => {
     if (extractedPlayers.length === 0) {
       toast({
@@ -265,9 +298,7 @@ const DataExtractor = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-
-                {/* Mobile Cards */}
+                </div>                {/* Mobile Cards */}
                 <div className="md:hidden space-y-3">
                   {extractedPlayers.filter(p => p.squad === 'Team A').map((player) => (
                     <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
@@ -282,43 +313,41 @@ const DataExtractor = () => {
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Goals</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={player.goals}
                             onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="0"
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Assists</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={player.assists}
                             onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="0"
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Saves</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={player.saves}
                             onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="0"
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Voting</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             value={player.defenderVoting}
                             onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="1"
-                            max="10"
-                            step="0.1"
                           />
                         </div>
                       </div>
@@ -401,9 +430,7 @@ const DataExtractor = () => {
                       ))}
                     </TableBody>
                   </Table>
-                </div>
-
-                {/* Mobile Cards */}
+                </div>                {/* Mobile Cards */}
                 <div className="md:hidden space-y-3">
                   {extractedPlayers.filter(p => p.squad === 'Team B').map((player) => (
                     <div key={player.id} className="bg-white border border-[#B8CFCE] rounded-lg p-4">
@@ -418,43 +445,41 @@ const DataExtractor = () => {
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Goals</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={player.goals}
                             onChange={(e) => updatePlayerStat(player.id, 'goals', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="0"
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Assists</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={player.assists}
                             onChange={(e) => updatePlayerStat(player.id, 'assists', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="0"
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Saves</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={player.saves}
                             onChange={(e) => updatePlayerStat(player.id, 'saves', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="0"
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-[#7F8CAA]">Voting</Label>
                           <Input
-                            type="number"
+                            type="text"
+                            inputMode="decimal"
                             value={player.defenderVoting}
                             onChange={(e) => updatePlayerStat(player.id, 'defenderVoting', e.target.value)}
                             className="h-8 text-center mt-1"
-                            min="1"
-                            max="10"
-                            step="0.1"
                           />
                         </div>
                       </div>
