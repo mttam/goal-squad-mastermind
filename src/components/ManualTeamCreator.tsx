@@ -22,41 +22,24 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>(selectedPlayers);
-
-  const handleDragStart = (e: React.DragEvent, player: Player, source: 'available' | 'teamA' | 'teamB') => {
-    e.dataTransfer.setData('player', JSON.stringify(player));
-    e.dataTransfer.setData('source', source);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-  const handleDrop = (e: React.DragEvent, target: 'available' | 'teamA' | 'teamB') => {
-    e.preventDefault();
-    const playerData = e.dataTransfer.getData('player');
-    const source = e.dataTransfer.getData('source') as 'available' | 'teamA' | 'teamB';
-    
-    if (!playerData || source === target) return;
-    
-    const player: Player = JSON.parse(playerData);
-    
-    // Remove from source
-    if (source === 'available') {
-      setAvailablePlayers(prev => prev.filter(p => p.id !== player.id));
-    } else if (source === 'teamA') {
+  const handleRemovePlayer = (player: Player, sourceTeam: 'teamA' | 'teamB') => {
+    // Remove from team
+    if (sourceTeam === 'teamA') {
       setTeamA(prev => prev.filter(p => p.id !== player.id));
-    } else if (source === 'teamB') {
+      toast({
+        title: "Player Removed! 🔴",
+        description: `${player.name} removed from Team A`,
+      });
+    } else {
       setTeamB(prev => prev.filter(p => p.id !== player.id));
+      toast({
+        title: "Player Removed! 🔵",
+        description: `${player.name} removed from Team B`,
+      });
     }
     
-    // Add to target
-    if (target === 'available') {
-      setAvailablePlayers(prev => [...prev, player]);
-    } else if (target === 'teamA') {
-      setTeamA(prev => [...prev, player]);
-    } else if (target === 'teamB') {
-      setTeamB(prev => [...prev, player]);
-    }
+    // Add back to available players
+    setAvailablePlayers(prev => [...prev, player]);
   };
 
   const handlePlayerClick = (player: Player, targetTeam: 'teamA' | 'teamB') => {
@@ -133,24 +116,22 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
     player: Player;
     source: 'available' | 'teamA' | 'teamB';
     onAddToTeam?: (player: Player, team: 'teamA' | 'teamB') => void;
+    onRemoveFromTeam?: (player: Player, sourceTeam: 'teamA' | 'teamB') => void;
   }
 
-  const PlayerCard = ({ player, source, onAddToTeam }: PlayerCardProps) => {
+  const PlayerCard = ({ player, source, onAddToTeam, onRemoveFromTeam }: PlayerCardProps) => {
     const isAvailable = source === 'available';
+    const isInTeam = source === 'teamA' || source === 'teamB';
     
     return (
-      <div
-        draggable
-        onDragStart={(e) => handleDragStart(e, player, source)}
-        className="flex items-center gap-2 p-2 rounded-lg bg-white border border-[#B8CFCE] cursor-move hover:bg-[#EAEFEF] transition-colors"
-      >
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-white border border-[#B8CFCE] hover:bg-[#EAEFEF] transition-colors">
         <span className="text-lg">{getPositionEmoji(player.position)}</span>
         <div className="flex-1 min-w-0">
           <div className="font-medium text-[#333446] truncate text-sm">{player.name}</div>
           <div className="text-xs text-[#7F8CAA]">{player.position}</div>
         </div>
         
-        {/* Add click buttons for available players */}
+        {/* Add buttons for available players */}
         {isAvailable && onAddToTeam && (
           <div className="flex gap-1">
             <button
@@ -175,6 +156,20 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
             </button>
           </div>
         )}
+        
+        {/* Remove button for team players */}
+        {isInTeam && onRemoveFromTeam && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFromTeam(player, source as 'teamA' | 'teamB');
+            }}
+            className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+            title="Remove from team"
+          >
+            ❌
+          </button>
+        )}
       </div>
     );
   };
@@ -182,19 +177,15 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
   return (
     <div className="space-y-6">
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Available Players */}        <Card className="bg-white border-[#B8CFCE]">
-          <CardHeader>
+        {/* Available Players */}        <Card className="bg-white border-[#B8CFCE]">          <CardHeader>
             <CardTitle className="text-[#333446] text-center">Available Players</CardTitle>
             <p className="text-sm text-[#7F8CAA] text-center">{availablePlayers.length} players</p>
             <p className="text-xs text-[#7F8CAA] text-center italic">
-              💡 Drag players or click 🔴A/🔵B buttons to assign to teams
+              💡 Click 🔴A/🔵B buttons to assign players to teams
             </p>
           </CardHeader>
           <CardContent>
-            <div
-              className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-[#B8CFCE] rounded-lg"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 'available')}            >
+            <div className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-[#B8CFCE] rounded-lg">
               {availablePlayers.map((player) => (
                 <PlayerCard 
                   key={player.id} 
@@ -225,19 +216,19 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
               />
               <p className="text-sm text-[#7F8CAA] text-center">{teamA.length} players</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-red-300 rounded-lg bg-red-50"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 'teamA')}
-            >
+          </CardHeader>          <CardContent>
+            <div className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-red-300 rounded-lg bg-red-50">
               {teamA.map((player) => (
-                <PlayerCard key={player.id} player={player} source="teamA" />
+                <PlayerCard 
+                  key={player.id} 
+                  player={player} 
+                  source="teamA" 
+                  onRemoveFromTeam={handleRemovePlayer}
+                />
               ))}
               {teamA.length === 0 && (
                 <div className="text-center text-[#7F8CAA] py-8">
-                  🔴 Drop players here for Team A
+                  🔴 Click 🔴A buttons to add players to Team A
                 </div>
               )}
             </div>
@@ -257,19 +248,19 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
               />
               <p className="text-sm text-[#7F8CAA] text-center">{teamB.length} players</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div
-              className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50"
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 'teamB')}
-            >
+          </CardHeader>          <CardContent>
+            <div className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
               {teamB.map((player) => (
-                <PlayerCard key={player.id} player={player} source="teamB" />
+                <PlayerCard 
+                  key={player.id} 
+                  player={player} 
+                  source="teamB" 
+                  onRemoveFromTeam={handleRemovePlayer}
+                />
               ))}
               {teamB.length === 0 && (
                 <div className="text-center text-[#7F8CAA] py-8">
-                  🔵 Drop players here for Team B
+                  🔵 Click 🔵B buttons to add players to Team B
                 </div>
               )}
             </div>
