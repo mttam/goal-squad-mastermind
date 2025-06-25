@@ -31,7 +31,6 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
-
   const handleDrop = (e: React.DragEvent, target: 'available' | 'teamA' | 'teamB') => {
     e.preventDefault();
     const playerData = e.dataTransfer.getData('player');
@@ -57,6 +56,26 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
       setTeamA(prev => [...prev, player]);
     } else if (target === 'teamB') {
       setTeamB(prev => [...prev, player]);
+    }
+  };
+
+  const handlePlayerClick = (player: Player, targetTeam: 'teamA' | 'teamB') => {
+    // Remove from available players
+    setAvailablePlayers(prev => prev.filter(p => p.id !== player.id));
+    
+    // Add to target team
+    if (targetTeam === 'teamA') {
+      setTeamA(prev => [...prev, player]);
+      toast({
+        title: "Player Added! 🔴",
+        description: `${player.name} added to Team A`,
+      });
+    } else {
+      setTeamB(prev => [...prev, player]);
+      toast({
+        title: "Player Added! 🔵",
+        description: `${player.name} added to Team B`,
+      });
     }
   };
 
@@ -110,39 +129,79 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
     setTeamA([]);
     setTeamB([]);
     setAvailablePlayers(selectedPlayers);
-  };
+  };  interface PlayerCardProps {
+    player: Player;
+    source: 'available' | 'teamA' | 'teamB';
+    onAddToTeam?: (player: Player, team: 'teamA' | 'teamB') => void;
+  }
 
-  const PlayerCard = ({ player, source }: { player: Player; source: 'available' | 'teamA' | 'teamB' }) => (
-    <div
-      draggable
-      onDragStart={(e) => handleDragStart(e, player, source)}
-      className="flex items-center gap-2 p-2 rounded-lg bg-white border border-[#B8CFCE] cursor-move hover:bg-[#EAEFEF] transition-colors"
-    >
-      <span className="text-lg">{getPositionEmoji(player.position)}</span>
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-[#333446] truncate text-sm">{player.name}</div>
-        <div className="text-xs text-[#7F8CAA]">{player.position}</div>
+  const PlayerCard = ({ player, source, onAddToTeam }: PlayerCardProps) => {
+    const isAvailable = source === 'available';
+    
+    return (
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, player, source)}
+        className="flex items-center gap-2 p-2 rounded-lg bg-white border border-[#B8CFCE] cursor-move hover:bg-[#EAEFEF] transition-colors"
+      >
+        <span className="text-lg">{getPositionEmoji(player.position)}</span>
+        <div className="flex-1 min-w-0">
+          <div className="font-medium text-[#333446] truncate text-sm">{player.name}</div>
+          <div className="text-xs text-[#7F8CAA]">{player.position}</div>
+        </div>
+        
+        {/* Add click buttons for available players */}
+        {isAvailable && onAddToTeam && (
+          <div className="flex gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToTeam(player, 'teamA');
+              }}
+              className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+              title="Add to Team A"
+            >
+              🔴 A
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToTeam(player, 'teamB');
+              }}
+              className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+              title="Add to Team B"
+            >
+              🔵 B
+            </button>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div className="grid md:grid-cols-3 gap-6">
-        {/* Available Players */}
-        <Card className="bg-white border-[#B8CFCE]">
+        {/* Available Players */}        <Card className="bg-white border-[#B8CFCE]">
           <CardHeader>
             <CardTitle className="text-[#333446] text-center">Available Players</CardTitle>
             <p className="text-sm text-[#7F8CAA] text-center">{availablePlayers.length} players</p>
+            <p className="text-xs text-[#7F8CAA] text-center italic">
+              💡 Drag players or click 🔴A/🔵B buttons to assign to teams
+            </p>
           </CardHeader>
           <CardContent>
             <div
               className="space-y-2 min-h-[300px] p-3 border-2 border-dashed border-[#B8CFCE] rounded-lg"
               onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, 'available')}
-            >
+              onDrop={(e) => handleDrop(e, 'available')}            >
               {availablePlayers.map((player) => (
-                <PlayerCard key={player.id} player={player} source="available" />
+                <PlayerCard 
+                  key={player.id} 
+                  player={player} 
+                  source="available" 
+                  onAddToTeam={handlePlayerClick}
+                />
               ))}
               {availablePlayers.length === 0 && (
                 <div className="text-center text-[#7F8CAA] py-8">
