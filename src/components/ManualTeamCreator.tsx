@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,6 +21,13 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
   const [teamA, setTeamA] = useState<Player[]>([]);
   const [teamB, setTeamB] = useState<Player[]>([]);
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>(selectedPlayers);
+
+  // Update team names when selectedMode changes
+  useEffect(() => {
+    setTeamAName(`Team A - ${selectedMode}`);
+    setTeamBName(`Team B - ${selectedMode}`);
+  }, [selectedMode]);
+
   const handleRemovePlayer = (player: Player, sourceTeam: 'teamA' | 'teamB') => {
     // Remove from team
     if (sourceTeam === 'teamA') {
