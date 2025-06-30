@@ -28,6 +28,11 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
     setTeamBName(`Team B - ${selectedMode}`);
   }, [selectedMode]);
 
+  // Sync availablePlayers with selectedPlayers prop
+  useEffect(() => {
+    setAvailablePlayers(selectedPlayers);
+  }, [selectedPlayers]);
+
   const handleRemovePlayer = (player: Player, sourceTeam: 'teamA' | 'teamB') => {
     // Remove from team
     if (sourceTeam === 'teamA') {
