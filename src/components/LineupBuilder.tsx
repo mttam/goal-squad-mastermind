@@ -664,7 +664,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                           </h5>                          <div className="space-y-1">
                             {rotationSchedule.teamA.map((item, index) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
-                                <span className="font-medium text-blue-600">#{item.segment}</span>
+                                <span className="font-medium text-red-600">#{item.segment}</span>
                                 <span></span>
                                 <span className="text-[#333446] truncate flex-1">{item.goalkeeper.name}</span>
                               </div>
@@ -682,7 +682,7 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                           </h5>                          <div className="space-y-1">
                             {rotationSchedule.teamB.map((item, index) => (
                               <div key={index} className="flex items-center gap-2 text-xs">
-                                <span className="font-medium text-red-600">#{item.segment}</span>
+                                <span className="font-medium text-blue-600">#{item.segment}</span>
                                 <span></span>
                                 <span className="text-[#333446] truncate flex-1">{item.goalkeeper.name}</span>
                               </div>
