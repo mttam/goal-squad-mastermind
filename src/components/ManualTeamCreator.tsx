@@ -28,10 +28,19 @@ const ManualTeamCreator = ({ selectedPlayers, selectedMode, selectedFormation }:
     setTeamBName(`Team B - ${selectedMode}`);
   }, [selectedMode]);
 
-  // Sync availablePlayers with selectedPlayers prop
+  // Sync availablePlayers with selectedPlayers prop, excluding players already in teams
   useEffect(() => {
-    setAvailablePlayers(selectedPlayers);
-  }, [selectedPlayers]);
+    const assignedPlayerIds = new Set([
+      ...teamA.map(p => p.id),
+      ...teamB.map(p => p.id)
+    ]);
+    
+    const filteredPlayers = selectedPlayers.filter(player => 
+      !assignedPlayerIds.has(player.id)
+    );
+    
+    setAvailablePlayers(filteredPlayers);
+  }, [selectedPlayers, teamA, teamB]);
 
   const handleRemovePlayer = (player: Player, sourceTeam: 'teamA' | 'teamB') => {
     // Remove from team
