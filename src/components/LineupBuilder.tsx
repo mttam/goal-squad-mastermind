@@ -485,8 +485,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
-                  Team A Formation (Blue - Top Side)
+                  <div className="w-4 h-4 bg-red-600 rounded-full"></div>
+                  Team A Formation (Red - Top Side)
                 </label>
                 <Select value={selectedFormationA} onValueChange={setSelectedFormationA}>
                   <SelectTrigger>
@@ -504,8 +504,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#333446] flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-600 rounded-full"></div>
-                  Team B Formation (Red - Bottom Side)
+                  <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
+                  Team B Formation (Blue - Bottom Side)
                 </label>
                 <Select value={selectedFormationB} onValueChange={setSelectedFormationB}>
                   <SelectTrigger>
@@ -602,8 +602,8 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                       : 'w-8 h-8 text-xs'
                   } ${
                     player.isGK 
-                      ? (player.team === 'A' ? 'bg-blue-800' : 'bg-red-800')
-                      : (player.team === 'A' ? 'bg-blue-600' : 'bg-red-600')
+                      ? (player.team === 'A' ? 'bg-red-800' : 'bg-blue-800')
+                      : (player.team === 'A' ? 'bg-red-600' : 'bg-blue-600')
                   } ${draggedPlayer === player.id ? 'scale-125 z-10' : ''}`}
                   style={{ 
                     left: player.x, 
@@ -633,16 +633,16 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
             {/* Team Legend */}
             <div className="flex items-center justify-center gap-6 text-sm text-[#7F8CAA]">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-blue-600 rounded-full border-2 border-white"></div>
+                <div className="w-5 h-5 bg-red-600 rounded-full border-2 border-white"></div>
                 <span>Team A (Top)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-red-600 rounded-full border-2 border-white"></div>
+                <div className="w-5 h-5 bg-blue-600 rounded-full border-2 border-white"></div>
                 <span>Team B (Bottom)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-blue-800 rounded-full border-2 border-white"></div>
                 <div className="w-5 h-5 bg-red-800 rounded-full border-2 border-white"></div>
+                <div className="w-5 h-5 bg-blue-800 rounded-full border-2 border-white"></div>
                 <span>Goalkeepers</span>
               </div>
             </div>
@@ -657,9 +657,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {/* Team A Rotation */}
                       {rotationSchedule.teamA.length > 0 && (
-                        <div className="bg-white rounded p-3 border-l-4 border-blue-600">
+                        <div className="bg-white rounded p-3 border-l-4 border-red-600">
                           <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
                             Team A 
                           </h5>                          <div className="space-y-1">
                             {rotationSchedule.teamA.map((item, index) => (
@@ -675,9 +675,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
                       {/* Team B Rotation */}
                       {rotationSchedule.teamB.length > 0 && (
-                        <div className="bg-white rounded p-3 border-l-4 border-red-600">
+                        <div className="bg-white rounded p-3 border-l-4 border-blue-600">
                           <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
-                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                             Team B 
                           </h5>                          <div className="space-y-1">
                             {rotationSchedule.teamB.map((item, index) => (
@@ -698,9 +698,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                       {/* Team A Formation */}
                       {(selectedFormationA || formationData?.teamA) && (
-                        <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-blue-600">
+                        <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-red-600">
                           <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
                             <span className="font-medium text-[#333446]">Team A ({selectedFormationA || formationData?.teamA})</span>
                           </div>
                           <div className="flex gap-2 text-[#7F8CAA]">
@@ -720,9 +720,9 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
 
                       {/* Team B Formation */}
                       {(selectedFormationB || formationData?.teamB) && (
-                        <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-red-600">
+                        <div className="flex items-center justify-between p-2 bg-white rounded border-l-4 border-blue-600">
                           <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                            <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                             <span className="font-medium text-[#333446]">Team B ({selectedFormationB || formationData?.teamB})</span>
                           </div>
                           <div className="flex gap-2 text-[#7F8CAA]">
@@ -747,38 +747,38 @@ const LineupBuilder: React.FC<LineupBuilderProps> = ({ className, formation, for
                 {!rotationSchedule && (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                     {/* Team A Roster */}
-                    <div className="bg-white rounded p-3 border-l-4 border-blue-600">
+                    <div className="bg-white rounded p-3 border-l-4 border-red-600">
                       <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
-                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                        <div className="w-3 h-3 bg-red-600 rounded-full"></div>
                         Team A Roster
                       </h5>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
                         {getTeamRoster('A').map((player) => (
                           <div key={`A-${player.number}`} className="flex items-center gap-2 text-xs">
-                            <span className={`font-medium ${player.isGK ? 'text-blue-800' : 'text-blue-600'}`}>
+                            <span className={`font-medium ${player.isGK ? 'text-red-800' : 'text-red-600'}`}>
                               {player.number}
                             </span>
                             <span className="text-[#333446] truncate flex-1">{player.name}</span>
-                            {player.isGK && <span className="text-blue-800">🥅</span>}
+                            {player.isGK && <span className="text-red-800">🥅</span>}
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* Team B Roster */}
-                    <div className="bg-white rounded p-3 border-l-4 border-red-600">
+                    <div className="bg-white rounded p-3 border-l-4 border-blue-600">
                       <h5 className="text-sm font-medium text-[#333446] mb-2 flex items-center gap-2">
-                        <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                         Team B Roster
                       </h5>
                       <div className="space-y-1 max-h-32 overflow-y-auto">
                         {getTeamRoster('B').map((player) => (
                           <div key={`B-${player.number}`} className="flex items-center gap-2 text-xs">
-                            <span className={`font-medium ${player.isGK ? 'text-red-800' : 'text-red-600'}`}>
+                            <span className={`font-medium ${player.isGK ? 'text-blue-800' : 'text-blue-600'}`}>
                               {player.number}
                             </span>
                             <span className="text-[#333446] truncate flex-1">{player.name}</span>
-                            {player.isGK && <span className="text-red-800">🥅</span>}
+                            {player.isGK && <span className="text-blue-800">🥅</span>}
                           </div>
                         ))}
                       </div>
