@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/types/fantacalcietto';
-import { updatePlayersInCSV } from '@/utils/csvParser';
 
 const DataExtractor = () => {
   const { formations, setPlayers, players } = useFantacalcietto();
@@ -126,7 +125,7 @@ const DataExtractor = () => {
     });
   };
 
-  const saveToCSV = async () => {
+  const saveToDatabase = async () => {
     if (extractedPlayers.length === 0) {
       toast({
         title: "No Data to Save ❌",
@@ -137,21 +136,21 @@ const DataExtractor = () => {
     }
 
     try {
-      // Update players in CSV file (merges with existing data and downloads updated file)
+      // Save to CSV file (triggers download)
       const mergedPlayers = await updatePlayersInCSV(extractedPlayers);
       
       // Also update the local context for immediate UI updates
       setPlayers(mergedPlayers);
 
       toast({
-        title: "CSV File Updated! ✅",
-        description: `Updated db_0.csv downloaded with ${extractedPlayers.length} players. Replace the old file in your public folder.`,
+        title: "Data Saved Successfully! ✅",
+        description: `Player data updated and CSV file downloaded. ${extractedPlayers.length} players processed.`,
       });
     } catch (error) {
       console.error('Failed to save to CSV:', error);
       toast({
         title: "Save Failed ❌",
-        description: "Failed to update CSV file. Please try again.",
+        description: "Failed to save data to CSV file. Please try again.",
         variant: "destructive",
       });
     }
@@ -216,7 +215,7 @@ const DataExtractor = () => {
                   onClick={saveToCSV}
                   className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full sm:w-auto"
                 >
-                  Save to CSV File 💾
+                  Save to Database 💾
                 </Button>
               </div>
             </div>
