@@ -126,7 +126,7 @@ const DataExtractor = () => {
     });
   };
 
-  const saveToDatabase = async () => {
+  const saveToCSV = async () => {
     if (extractedPlayers.length === 0) {
       toast({
         title: "No Data to Save ❌",
@@ -137,21 +137,21 @@ const DataExtractor = () => {
     }
 
     try {
-      // Save to CSV file (triggers download)
+      // Update players in CSV file (merges with existing data and downloads updated file)
       const mergedPlayers = await updatePlayersInCSV(extractedPlayers);
       
       // Also update the local context for immediate UI updates
       setPlayers(mergedPlayers);
 
       toast({
-        title: "Data Saved Successfully! ✅",
-        description: `Player data updated and CSV file downloaded. ${extractedPlayers.length} players processed.`,
+        title: "CSV File Updated! ✅",
+        description: `Updated db_0.csv downloaded with ${extractedPlayers.length} players. Replace the old file in your public folder.`,
       });
     } catch (error) {
       console.error('Failed to save to CSV:', error);
       toast({
         title: "Save Failed ❌",
-        description: "Failed to save data to CSV file. Please try again.",
+        description: "Failed to update CSV file. Please try again.",
         variant: "destructive",
       });
     }
@@ -174,7 +174,7 @@ const DataExtractor = () => {
           📊 Extract & Edit Formation Data
         </CardTitle>
         <p className="text-sm text-[#7F8CAA]">
-          Extract player data from existing formations, edit statistics manually, and export or save to database
+          Extract player data from existing formations, edit statistics manually, and export or save to CSV database
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -213,7 +213,7 @@ const DataExtractor = () => {
                   Download CSV 📄
                 </Button>
                 <Button 
-                  onClick={saveToDatabase}
+                  onClick={saveToCSV}
                   className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full sm:w-auto"
                 >
                   Save to CSV File 💾
