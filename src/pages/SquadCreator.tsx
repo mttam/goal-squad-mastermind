@@ -16,7 +16,7 @@ import ManualTeamCreator from '@/components/ManualTeamCreator';
 import SquadImporter from '@/components/SquadImporter';
 
 const SquadCreator = () => {
-  const { players, addSquad, replacePlayerInSquad, squads } = useFantacalcietto();
+  const { players, addSquad, replacePlayerInSquad, squads, isDataLoaded } = useFantacalcietto();
   const { toast } = useToast();
   const [selectedMode, setSelectedMode] = useState<MatchMode>('5vs5');
   const [selectedFormation, setSelectedFormation] = useState('');
@@ -28,7 +28,9 @@ const SquadCreator = () => {
   // Debug logging
   useEffect(() => {
     console.log('SquadCreator - Current squads:', squads);
-  }, [squads]);
+    console.log('SquadCreator - Players loaded from CSV:', players.length, players);
+    console.log('SquadCreator - Data loaded:', isDataLoaded);
+  }, [squads, players, isDataLoaded]);
 
   const modes = [
     { value: '5vs5', label: '5 vs 5', icon: '⚽' },
@@ -167,13 +169,22 @@ const SquadCreator = () => {
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-[#333446]">Squad Creator ⚽</h1>
         <p className="text-[#7F8CAA]">Generate balanced teams, create manual teams, or import from file</p>
+        {!isDataLoaded && (
+          <div className="flex items-center justify-center gap-2 text-[#7F8CAA]">
+            <div className="w-4 h-4 border-2 border-[#7F8CAA] border-t-transparent rounded-full animate-spin"></div>
+            <span>Loading player data from CSV...</span>
+          </div>
+        )}
+        {isDataLoaded && (
+          <p className="text-sm text-green-600">✅ Loaded {players.length} players from CSV file</p>
+        )}
       </div>
 
       <Tabs defaultValue="auto" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="auto">Auto Generate</TabsTrigger>
-          <TabsTrigger value="manual">Manual Creation</TabsTrigger>
-          <TabsTrigger value="import">Import from File</TabsTrigger>
+          <TabsTrigger value="auto" disabled={!isDataLoaded}>Auto Generate</TabsTrigger>
+          <TabsTrigger value="manual" disabled={!isDataLoaded}>Manual Creation</TabsTrigger>
+          <TabsTrigger value="import" disabled={!isDataLoaded}>Import from File</TabsTrigger>
         </TabsList>
 
         <TabsContent value="auto" className="space-y-6">

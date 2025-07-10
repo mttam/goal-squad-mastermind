@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { Player, Squad, Formation, Due, MatchMode } from '@/types/fantacalcietto';
 import { generateFakeData } from '@/utils/fakeData';
 import { LocalStorageManager, STORAGE_KEYS, DataValidators, StorageError } from '@/utils/localStorage';
+import { loadPlayersFromCSV } from '@/utils/csvParser';
 
 interface FantacalciettoContextType {
   players: Player[];
@@ -93,20 +94,29 @@ export const FantacalciettoProvider = ({ children }: { children: ReactNode }) =>
           setStorageErrors(prev => [...prev, ...migrationResult.errors]);
         }
 
-        // Load players
-        const playersResult = LocalStorageManager.load<Player[]>(STORAGE_KEYS.players, DataValidators.isPlayersArray);
-        if (playersResult.success && playersResult.data) {
-          setPlayersState(playersResult.data);
-          if (playersResult.recovered) {
-            setStorageErrors(prev => [...prev, 'Players data recovered from backup']);
-          }
-        } else {
-          // Fall back to fake data for players
-          const fakeData = generateFakeData();
-          setPlayersState(fakeData);
-          setPlayers(fakeData); // Save to localStorage
-          if (playersResult.error) {
-            setStorageErrors(prev => [...prev, `Players load error: ${playersResult.error?.message}`]);
+        // Load players from CSV file
+        try {
+          const csvPlayers = await loadPlayersFromCSV();
+          setPlayersState(csvPlayers);
+          console.log(`Loaded ${csvPlayers.length} players from CSV`);
+        } catch (error) {
+          console.error('Failed to load players from CSV, falling back to localStorage:', error);
+          
+          // Fallback to localStorage if CSV loading fails
+          const playersResult = LocalStorageManager.load<Player[]>(STORAGE_KEYS.players, DataValidators.isPlayersArray);
+          if (playersResult.success && playersResult.data) {
+            setPlayersState(playersResult.data);
+            if (playersResult.recovered) {
+              setStorageErrors(prev => [...prev, 'Players data recovered from backup']);
+            }
+          } else {
+            // Final fallback to fake data
+            const fakeData = generateFakeData();
+            setPlayersState(fakeData);
+            setPlayers(fakeData); // Save to localStorage for future use
+            if (playersResult.error) {
+              setStorageErrors(prev => [...prev, `Players load error: ${playersResult.error?.message}`]);
+            }
           }
         }
 
