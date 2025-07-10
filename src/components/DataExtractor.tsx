@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useFantacalcietto } from '@/context/FantacalciettoContext';
 import { useToast } from '@/hooks/use-toast';
 import { Player } from '@/types/fantacalcietto';
+import { updatePlayersInCSV } from '@/utils/csvParser';
 
 const DataExtractor = () => {
   const { formations, setPlayers, players } = useFantacalcietto();
@@ -125,7 +126,7 @@ const DataExtractor = () => {
     });
   };
 
-  const saveToDatabase = () => {
+  const saveToDatabase = async () => {
     if (extractedPlayers.length === 0) {
       toast({
         title: "No Data to Save ❌",
@@ -135,30 +136,25 @@ const DataExtractor = () => {
       return;
     }
 
-    const updatedPlayers = [...players];
-    let addedCount = 0;
-    let updatedCount = 0;
+    try {
+      // Save to CSV file (triggers download)
+      const mergedPlayers = await updatePlayersInCSV(extractedPlayers);
+      
+      // Also update the local context for immediate UI updates
+      setPlayers(mergedPlayers);
 
-    extractedPlayers.forEach(newPlayer => {
-      const existingIndex = updatedPlayers.findIndex(p => p.name === newPlayer.name);
-      if (existingIndex >= 0) {
-        updatedPlayers[existingIndex] = { ...updatedPlayers[existingIndex], ...newPlayer };
-        updatedCount++;
-      } else {
-        updatedPlayers.push({
-          ...newPlayer,
-          id: `extracted-${Date.now()}-${Math.random()}`,
-        });
-        addedCount++;
-      }
-    });
-
-    setPlayers(updatedPlayers);
-
-    toast({
-      title: "Data Saved Successfully! ✅",
-      description: `Added ${addedCount} new players, updated ${updatedCount} existing players`,
-    });
+      toast({
+        title: "Data Saved Successfully! ✅",
+        description: `Player data updated and CSV file downloaded. ${extractedPlayers.length} players processed.`,
+      });
+    } catch (error) {
+      console.error('Failed to save to CSV:', error);
+      toast({
+        title: "Save Failed ❌",
+        description: "Failed to save data to CSV file. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getPositionEmoji = (position: string) => {
@@ -220,7 +216,7 @@ const DataExtractor = () => {
                   onClick={saveToDatabase}
                   className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full sm:w-auto"
                 >
-                  Save to Database 💾
+                  Save to CSV File 💾
                 </Button>
               </div>
             </div>
