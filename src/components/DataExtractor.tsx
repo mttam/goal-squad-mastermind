@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -125,7 +124,7 @@ const DataExtractor = () => {
     });
   };
 
-  const saveToDatabase = async () => {
+  const saveToDatabase = () => {
     if (extractedPlayers.length === 0) {
       toast({
         title: "No Data to Save ❌",
@@ -135,25 +134,30 @@ const DataExtractor = () => {
       return;
     }
 
-    try {
-      // Save to CSV file (triggers download)
-      const mergedPlayers = await updatePlayersInCSV(extractedPlayers);
-      
-      // Also update the local context for immediate UI updates
-      setPlayers(mergedPlayers);
+    const updatedPlayers = [...players];
+    let addedCount = 0;
+    let updatedCount = 0;
 
-      toast({
-        title: "Data Saved Successfully! ✅",
-        description: `Player data updated and CSV file downloaded. ${extractedPlayers.length} players processed.`,
-      });
-    } catch (error) {
-      console.error('Failed to save to CSV:', error);
-      toast({
-        title: "Save Failed ❌",
-        description: "Failed to save data to CSV file. Please try again.",
-        variant: "destructive",
-      });
-    }
+    extractedPlayers.forEach(newPlayer => {
+      const existingIndex = updatedPlayers.findIndex(p => p.name === newPlayer.name);
+      if (existingIndex >= 0) {
+        updatedPlayers[existingIndex] = { ...updatedPlayers[existingIndex], ...newPlayer };
+        updatedCount++;
+      } else {
+        updatedPlayers.push({
+          ...newPlayer,
+          id: `extracted-${Date.now()}-${Math.random()}`,
+        });
+        addedCount++;
+      }
+    });
+
+    setPlayers(updatedPlayers);
+
+    toast({
+      title: "Data Saved Successfully! ✅",
+      description: `Added ${addedCount} new players, updated ${updatedCount} existing players`,
+    });
   };
 
   const getPositionEmoji = (position: string) => {
@@ -173,7 +177,7 @@ const DataExtractor = () => {
           📊 Extract & Edit Formation Data
         </CardTitle>
         <p className="text-sm text-[#7F8CAA]">
-          Extract player data from existing formations, edit statistics manually, and export or save to CSV database
+          Extract player data from existing formations, edit statistics manually, and export or save to database
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -212,7 +216,7 @@ const DataExtractor = () => {
                   Download CSV 📄
                 </Button>
                 <Button 
-                  onClick={saveToCSV}
+                  onClick={saveToDatabase}
                   className="bg-[#333446] text-white hover:bg-[#7F8CAA] w-full sm:w-auto"
                 >
                   Save to Database 💾
